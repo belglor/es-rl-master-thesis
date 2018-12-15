@@ -1,0 +1,30 @@
+name: ml
+channels:
+- pytorch
+- defaults
+- conda-forge
+- anaconda-fusion
+- seaborn
+dependencies:
+- python
+- numpy>=1.13       # version due to universe, due to go_vncdriver
+- matplotlib
+- scikit-learn
+- scipy
+- tensorflow
+- keras
+- pytorch
+- torchvision
+- ipython
+- pandas
+- opencv
+- numba             # Required by umap-learn
+- dropbox
+- seaborn
+- rope              # Code refactoring
+- pip
+- pip:
+  - gym==0.9.5
+  - universe
+  - umap-learn
+prefix: /Users/Jakob/anaconda/envs/ml
