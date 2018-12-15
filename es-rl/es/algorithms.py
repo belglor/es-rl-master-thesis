@@ -975,9 +975,9 @@ class StochasticGradientEstimation(Algorithm):
             torch.manual_seed(abs(seeds[i]))
             for layer, param in enumerate(self.model.parameters()):
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer])
-                num += (sign * retrn) * eps.pow(2).sum() / (self.sigma**2) 
+                num += float((sign * retrn) * eps.pow(2).sum()) / (self.sigma**2) 
                 denom += eps.pow(2).sum() / (self.sigma**2)
-        baseline_mu = num.float()/denom #TODO: added cast to float because REASONS
+        baseline_mu = num/denom #TODO: added cast to float because REASONS
         return baseline_mu 
     
     def compute_baseline_sigma(self, returns, seeds):
@@ -989,9 +989,9 @@ class StochasticGradientEstimation(Algorithm):
             torch.manual_seed(abs(seeds[i]))
             for layer, param in enumerate(self.model.parameters()):
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer])
-                num += (sign * retrn) * (eps.pow(2).sum() -1)**2 / (self.sigma**4) 
+                num += float((sign * retrn) * (eps.pow(2).sum() -1)**2) / (self.sigma**4) 
                 denom += (eps.pow(2).sum() -1)**2 / (self.sigma**4)
-        baseline_sigma = num.float()/denom #added cast to float
+        baseline_sigma = num/denom #added cast to float
         return baseline_sigma    
     
 

@@ -66,7 +66,7 @@ def parse_inputs():
     parser.add_argument('--common-random-numbers', action='store_true', default=False, help='Whether or not to use common random numbers for perturbation evaluation')
     parser.add_argument('--safe-mutation', type=str, default='None', choices=sm_choices, help='String denoting the type of safe mutations to use')
     parser.add_argument('--batch-size', type=int, default=1000, metavar='BS', help='Batch size agent evaluation (max episode steps for RL setting rollouts)')
-    parser.add_argument('--max-generations', type=int, default=20, metavar='MG', help='Maximum number of generations')
+    parser.add_argument('--max-generations', type=int, default=5, metavar='MG', help='Maximum number of generations')
     parser.add_argument('--val-every', type=int, default=25, metavar='TE', help='Interval at which to test the model on validation set (if relevant)')
     # Environment
     parser.add_argument('--env-name', type=str, default='MNIST', metavar='ENV', help='RL environment or dataset')
