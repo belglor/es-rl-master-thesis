@@ -62,10 +62,9 @@ FOO=${TIME_LIMIT:="24:00"}
 # List of input strings to the call
 ID="E001-job_ssumbit_test"
 COMMON_IN="--id ${ID} --algorithm NES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name MNIST --model MNISTNet --max-generations 20 --batch-size 1000 --safe-mutation None"
-#declare -a INPUTS=(
-#				   "$COMMON_IN"
-#				   "$COMMON_IN --optimize-sigma"
-#				   )
+declare -a INPUTS=(
+				   "$COMMON_IN"
+				   )
 SCRIPT="run_hpc.sh"
 REPEATS=1
 
