@@ -23,7 +23,8 @@ cmake --version
 module load python3/3.6.2
 module load gcc/7.2.0
 module load opencv/3.3.1-python-3.6.2
-module load numpy/1.13.1-python-3.6.2-openblas-0.2.20
+#module load numpy/1.13.1-python-3.6.2-openblas-0.2.20
+module load numpy/1.14.3-python-2.7.13-openblas-0.2.20
 module load scipy/0.19.1-python-3.6.2
 
 # # Use HOME directory as base
