@@ -1471,7 +1471,7 @@ class ES(StochasticGradientEstimation):
 
     def print_init(self):
         super(ES, self).print_init()
-        s = "Sigma                 {:5.4f}\n".format(self.sigma)
+        s = "Sigma                 {\n".format(self.sigma)
         s += "Optimizing sigma      {:s}\n".format(str(self.optimize_sigma))
         s += "Use MU baseline       {:s}\n".format(str(self.baseline_mu))
         s += "Use SIGMA baseline    {:s}\n".format(str(self.baseline_sigma))

@@ -60,8 +60,8 @@ FOO=${TIME_LIMIT:="24:00"}
 
 
 # List of input strings to the call
-ID="E001-job_sumbit_test"
-COMMON_IN="--id ${ID} --algorithm NES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name MNIST --model MNISTNet --max-generations 5 --batch-size 1000 --safe-mutation None"
+ID="E002-CartPole_submit_test"
+COMMON_IN="--id ${ID} --algorithm NES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name CartPole-v0 --model ClassicalControlFNN --max-generations 100 --batch-size 1000 --safe-mutation None"
 declare -a INPUTS=(
 				   "$COMMON_IN"
 				   )
