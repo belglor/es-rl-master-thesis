@@ -56,17 +56,17 @@ def parse_inputs():
 
     parser = argparse.ArgumentParser(description='Experiments')
     # Algorithm
-    parser.add_argument('--algorithm', type=str, default='NES', metavar='ALG', help='Model name in es.models')
+    parser.add_argument('--algorithm', type=str, default='sNES', metavar='ALG', help='Model name in es.models')
     parser.add_argument('--perturbations', type=int, default=100, metavar='N', help='Number of perturbed models to make; must be even')
     parser.add_argument('--sigma', type=float, default=0.05, metavar='SD', help='Initial noise standard deviation')
-    parser.add_argument('--optimize-sigma', type=str, default='False', choices=sigma_choices, metavar='OS', help='Which type of covariance matrix parameterization to use')
+    parser.add_argument('--optimize-sigma', type=str, default='None', choices=sigma_choices, metavar='OS', help='Which type of covariance matrix parameterization to use')
     parser.add_argument('--no-antithetic', action='store_true', default=True, help='Boolean to not to use antithetic sampling')
     parser.add_argument('--forced-refresh', type=float, default=0.0, help='Forced refresh rate for importance sampling')
     parser.add_argument('--adaptation-sampling', action='store_true', default=False, help='Whether or not to use adaptive sampling for updating learning rate')
     parser.add_argument('--common-random-numbers', action='store_true', default=False, help='Whether or not to use common random numbers for perturbation evaluation')
     parser.add_argument('--safe-mutation', type=str, default='None', choices=sm_choices, help='String denoting the type of safe mutations to use')
     parser.add_argument('--batch-size', type=int, default=1000, metavar='BS', help='Batch size agent evaluation (max episode steps for RL setting rollouts)')
-    parser.add_argument('--max-generations', type=int, default=5, metavar='MG', help='Maximum number of generations')
+    parser.add_argument('--max-generations', type=int, default=100, metavar='MG', help='Maximum number of generations')
     parser.add_argument('--val-every', type=int, default=25, metavar='TE', help='Interval at which to test the model on validation set (if relevant)')
     # Environment
     parser.add_argument('--env-name', type=str, default='MNIST', metavar='ENV', help='RL environment or dataset')

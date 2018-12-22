@@ -1732,10 +1732,7 @@ class sES(StochasticGradientEstimation):
 
     def _store_stats(self, *args):
         super(sES, self)._store_stats(*args)
-        if not self.optimize_sigma:
-            self.stats['sigma'].append(self.sigma.view(-1)[0])
-            self.stats['beta'].append(self.beta.data.view(-1)[0])
-        elif self.optimize_sigma == 'single':
+        if (self.optimize_sigma is None) or (self.optimize_sigma == 'single'):
             self.stats['sigma'].append(self.sigma.view(-1)[0].numpy())
             self.stats['beta'].append(self.beta.data.view(-1)[0].numpy())
         elif self.optimize_sigma == 'per-layer':

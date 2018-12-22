@@ -94,6 +94,7 @@ def gym_render(model, env, max_episode_length):
                 state, reward, done, _ = env.step(action)
                 this_model_return += reward
                 this_model_num_steps += 1
+                #print(this_model_num_steps)
                 # Cast state
                 state = Variable(torch.from_numpy(state).float(), volatile=True).unsqueeze(0)
                 env.render()
