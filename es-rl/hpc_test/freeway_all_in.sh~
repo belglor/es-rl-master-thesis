@@ -63,7 +63,7 @@ FOO=${TIME_LIMIT:="24:00"}
 ID="E006-Freeway_all_in"
 COMMON_IN="--id ${ID} --algorithm NES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name Freeway-v0 --model DQN --max-generations 100 --batch-size 1000 --safe-mutation None "
 declare -a INPUTS=(
-				   "$COMMON_IN --lr 1 --optimize-sigma single --basline_mu --baseline_sigma --use_naturgrad" 
+				   "$COMMON_IN --lr 1 --optimize-sigma single --baseline_mu --baseline_sigma --use-naturgrad" 
 				   )
 SCRIPT="run_hpc.sh"
 REPEATS=1
