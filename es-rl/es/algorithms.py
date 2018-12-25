@@ -1568,6 +1568,9 @@ class sES(StochasticGradientEstimation):
         # Add learning rates to stats
         for i, _ in enumerate(self.lr_scheduler.get_lr()):
             self.stats['lr_' + str(i)] = []
+            
+        ########################################
+        self.use_naturgrad = use_naturgrad
 
     def _store_stats(self, *args):
         super(sES, self)._store_stats(*args)
@@ -1642,7 +1645,7 @@ class sES(StochasticGradientEstimation):
             assert not np.isinf(pp.data).any()
         return perturbed_model
 
-    def compute_gradients(self, returns, seeds):
+    def compute_gradients(self, returns, seeds, baseline_mu=None, baseline_sigma=None):
         """Computes the gradients of the weights of the model wrt. to the return. 
         
         The gradients will point in the direction of change in the weights resulting in a
@@ -1667,35 +1670,102 @@ class sES(StochasticGradientEstimation):
             i = 0
             for layer, param in enumerate(self.model.parameters()):
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer], cuda=self.cuda)
+                ##########################
                 if self.use_naurgrad: #TODO: added Natural Gradient adjustement. TOCHECK if same gradient is computed us lr=1              
-                    if not self.optimize_sigma:
-                        weight_gradients[layer] += (self.sigma / (self.perturbations)) * (sign * retrn * eps)
-                    if self.optimize_sigma == 'single':
-                        weight_gradients[layer] += (self.sigma / (self.perturbations)) * (sign * retrn * eps)
-                        beta_gradients += 1 / ( 2 * self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
-                    elif self.optimize_sigma == 'per-layer':
-                        weight_gradients[layer] += (self.sigma[layer] / (self.perturbations)) * (sign * retrn * eps)
-                        beta_gradients[layer] += 1 / ( 2 * self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
-                    elif self.optimize_sigma == 'per-weight':
-                        j = i + param.numel()
-                        weight_gradients[layer] += (self.sigma[i:j].view(weight_gradients[layer].size()) / (self.perturbations)) * (sign * retrn * eps)
-                        beta_gradients[i:j] += 1 / ( 2 * self.perturbations) * retrn * (eps.view(-1).pow(2) - 1)
-                        i = j
+                    if baseline_mu is not None:
+                        if not self.optimize_sigma:
+                            weight_gradients[layer] += (self.sigma / (self.perturbations)) * (sign * (retrn - baseline_mu) * eps)
+                        if self.optimize_sigma == 'single':
+                            weight_gradients[layer] += (self.sigma / (self.perturbations)) * (sign * (retrn - baseline_mu) * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients += (2*np.exp(self.beta)) / (self.perturbations) * (retrn - baseline_sigma) * (eps.pow(2).sum() - eps.numel())
+                            else:
+                                beta_gradients += (2*np.exp(self.beta)) / (self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
+                        elif self.optimize_sigma == 'per-layer':
+                            weight_gradients[layer] += (self.sigma[layer] / (self.perturbations)) * (sign * (retrn - baseline_mu) * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients[layer] += (2*np.exp(self.beta[layer])) / (self.perturbations) * (retrn - baseline_sigma) * (eps.pow(2).sum() - eps.numel())
+                            else:
+                                beta_gradients[layer] += (2*np.exp(self.beta[layer])) / (self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
+                        elif self.optimize_sigma == 'per-weight':
+                            j = i + param.numel()
+                            weight_gradients[layer] += (self.sigma[i:j].view(weight_gradients[layer].size()) / (self.perturbations)) * (sign * (retrn - baseline_mu) * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients[i:j] += (2*np.exp(self.beta[i:j].view(weight_gradients[layer].size()))) / ( 2 * self.perturbations) * (retrn - baseline_sigma) * (eps.view(-1).pow(2) - 1)
+                            else:
+                                beta_gradients[i:j] += (2*np.exp(self.beta[i:j].view(weight_gradients[layer].size()))) / ( 2 * self.perturbations) * retrn * (eps.view(-1).pow(2) - 1)
+                            i = j
+                    else: #USE NATURGRAD, NO BASELINE MU, CHECK FOR BASELINE SIGMA
+                        if not self.optimize_sigma:
+                            weight_gradients[layer] += (self.sigma / (self.perturbations)) * (sign * retrn * eps)
+                        if self.optimize_sigma == 'single':
+                            weight_gradients[layer] += (self.sigma / (self.perturbations)) * (sign * retrn * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients += (2*np.exp(self.beta)) / (self.perturbations) * (retrn - baseline_sigma) * (eps.pow(2).sum() - eps.numel())
+                            else:
+                                beta_gradients += (2*np.exp(self.beta)) / (self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
+                        elif self.optimize_sigma == 'per-layer':
+                            weight_gradients[layer] += (self.sigma[layer] / (self.perturbations)) * (sign * retrn * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients[layer] += (2*np.exp(self.beta[layer])) / (self.perturbations) * (retrn - baseline_sigma) * (eps.pow(2).sum() - eps.numel())
+                            else:
+                                beta_gradients[layer] += (2*np.exp(self.beta[layer])) / (self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
+                        elif self.optimize_sigma == 'per-weight':
+                            j = i + param.numel()
+                            weight_gradients[layer] += (self.sigma[i:j].view(weight_gradients[layer].size()) / (self.perturbations)) * (sign * retrn * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients[i:j] += (2*np.exp(self.beta[i:j].view(weight_gradients[layer].size()))) / ( 2 * self.perturbations) * (retrn - baseline_sigma) * (eps.view(-1).pow(2) - 1)
+                            else:
+                                beta_gradients[i:j] += (2*np.exp(self.beta[i:j].view(weight_gradients[layer].size()))) / ( 2 * self.perturbations) * retrn * (eps.view(-1).pow(2) - 1)
+                            i = j                        
                 #TODO: need to check naturgrad direction calculation taking into account the betatransform
-                else:
-                    if not self.optimize_sigma:
-                        weight_gradients[layer] += (1 / (self.perturbations * self.sigma)) * (sign * retrn * eps)
-                    if self.optimize_sigma == 'single':
-                        weight_gradients[layer] += (1 / (self.perturbations * self.sigma)) * (sign * retrn * eps)
-                        beta_gradients += (2*np.exp(2*self.beta)) / (self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
-                    elif self.optimize_sigma == 'per-layer':
-                        weight_gradients[layer] += (1 / (self.perturbations * self.sigma[layer])) * (sign * retrn * eps)
-                        beta_gradients[layer] += (2*np.exp(2*self.beta[layer])) / (self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
-                    elif self.optimize_sigma == 'per-weight':
-                        j = i + param.numel()
-                        weight_gradients[layer] += (1 / (self.perturbations * self.sigma[i:j].view(weight_gradients[layer].size()))) * (sign * retrn * eps)
-                        beta_gradients[i:j] += (2*np.exp(2*self.beta[i:j].view(weight_gradients[layer].size()))) / (self.perturbations) * retrn * (eps.view(-1).pow(2) - 1)
-                        i = j
+                else: #DON'T USE NATURGRAD
+                    if baseline_mu is not None:
+                        if not self.optimize_sigma:
+                            weight_gradients[layer] += (1 / (self.perturbations * self.sigma)) * (sign * (retrn - baseline_mu) * eps)
+                        if self.optimize_sigma == 'single':
+                            weight_gradients[layer] += (1 / (self.perturbations * self.sigma)) * (sign * (retrn - baseline_mu) * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients += 1 / ( 2 * self.perturbations) * (retrn - baseline_sigma) * (eps.pow(2).sum() - eps.numel())
+                            else:
+                                beta_gradients += 1 / ( 2 * self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())                            
+                        elif self.optimize_sigma == 'per-layer':
+                            weight_gradients[layer] += (1 / (self.perturbations * self.sigma[layer])) * (sign * (retrn - baseline_mu) * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients[layer] += 1 / ( 2 * self.perturbations) * (retrn - baseline_sigma) * (eps.pow(2).sum() - eps.numel())
+                            else:
+                                beta_gradients[layer] += 1 / ( 2 * self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
+                        elif self.optimize_sigma == 'per-weight':
+                            j = i + param.numel()
+                            weight_gradients[layer] += (1 / (self.perturbations * self.sigma[i:j].view(weight_gradients[layer].size()))) * (sign * (retrn - baseline_mu) * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients[i:j] += 1 / ( 2 * self.perturbations) * (retrn - baseline_sigma) * (eps.view(-1).pow(2) - 1)
+                            else:
+                                beta_gradients[i:j] += 1 / ( 2 * self.perturbations) * retrn * (eps.view(-1).pow(2) - 1)
+                            i = j
+                    else: #DON'T USE NATURGRAD, NO BASELINE MU, CHECK BASELINE SIGMA
+                        if not self.optimize_sigma:
+                            weight_gradients[layer] += (1 / (self.perturbations * self.sigma)) * (sign * retrn * eps)
+                        if self.optimize_sigma == 'single':
+                            weight_gradients[layer] += (1 / (self.perturbations * self.sigma)) * (sign * retrn * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients += 1 / ( 2 * self.perturbations) * (retrn - baseline_sigma) * (eps.pow(2).sum() - eps.numel())
+                            else:
+                                beta_gradients += 1 / ( 2 * self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())                            
+                        elif self.optimize_sigma == 'per-layer':
+                            weight_gradients[layer] += (1 / (self.perturbations * self.sigma[layer])) * (sign * retrn * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients[layer] += 1 / ( 2 * self.perturbations) * (retrn - baseline_sigma) * (eps.pow(2).sum() - eps.numel())
+                            else:
+                                beta_gradients[layer] += 1 / ( 2 * self.perturbations) * retrn * (eps.pow(2).sum() - eps.numel())
+                        elif self.optimize_sigma == 'per-weight':
+                            j = i + param.numel()
+                            weight_gradients[layer] += (1 / (self.perturbations * self.sigma[i:j].view(weight_gradients[layer].size()))) * (sign * retrn * eps)
+                            if baseline_sigma is not None:
+                                beta_gradients[i:j] += 1 / ( 2 * self.perturbations) * (retrn - baseline_sigma) * (eps.view(-1).pow(2) - 1)
+                            else:
+                                beta_gradients[i:j] += 1 / ( 2 * self.perturbations) * retrn * (eps.view(-1).pow(2) - 1)
+                            i = j
   
         # Set gradients
         self.optimizer.zero_grad()
@@ -1715,6 +1785,9 @@ class sES(StochasticGradientEstimation):
             s += "Sigma                 {:5.4f}\n".format(self.sigma[0])
         elif self.optimize_sigma in ['per-layer', 'per-weight']:
             s += "Sigma mean            {:5.4f}\n".format(self.sigma.mean())
+        s += "Use MU baseline       {:s}\n".format(str(self.baseline_mu))
+        s += "Use SIGMA baseline    {:s}\n".format(str(self.baseline_sigma))
+        s += "Use natural gradient  {:s}\n".format(str(self.use_naturgrad))
         if self.chkpt_dir is not None:
             with open(os.path.join(self.chkpt_dir, 'init.log'), 'a') as f:
                 f.write(s + "\n\n")
@@ -1766,7 +1839,7 @@ class sNES(sES):
             self._weight_update_scale = 1/self.sigma.mean()**2
             # self._sigma_update_scale = 1/(2*self.sigma.mean()**4)
 
-    def compute_gradients(self, returns, seeds):
+    def compute_gradients(self, returns, seeds, baseline_mu=None, baseline_sigma=None):
         """Computes the gradients of the weights of the model wrt. to the return. 
         
         The gradients will point in the direction of change in the weights resulting in a
@@ -1792,18 +1865,44 @@ class sNES(sES):
             for layer, param in enumerate(self.model.parameters()):
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer], cuda=self.cuda)
                 if not self.optimize_sigma:
-                    weight_gradients[layer] += self._weight_update_scale * self.sigma * (sign * retrn * eps) / self.perturbations
-                if self.optimize_sigma == 'single':
-                    weight_gradients[layer] += self._weight_update_scale * self.sigma * (sign * retrn * eps) / self.perturbations
+                    weight_gradients[layer] += (sign * retrn * eps) / self.perturbations
+                elif self.optimize_sigma == 'single':
+                    weight_gradients[layer] += (sign * retrn * eps) / self.perturbations
                     beta_gradients += float(retrn * (eps.pow(2).sum() - eps.numel()))/ self.perturbations
                 elif self.optimize_sigma == 'per-layer':
-                    weight_gradients[layer] += self._weight_update_scale * self.sigma[layer] * (sign * retrn * eps) / self.perturbations
+                    weight_gradients[layer] += (sign * retrn * eps) / self.perturbations
                     beta_gradients[layer] += float(retrn * (eps.pow(2).sum() - eps.numel())) / self.perturbations #TODO: added float cast because REASONS
                 elif self.optimize_sigma == 'per-weight':
                     k = j + param.numel()
-                    weight_gradients[layer] += self._weight_update_scale * self.sigma[j:k].view(weight_gradients[layer].size()) * (sign * retrn * eps) / self.perturbations
+                    weight_gradients[layer] += (sign * retrn * eps) / self.perturbations
                     beta_gradients[j:k] += retrn * (eps.view(-1).pow(2) - 1) / self.perturbations
                     j = k
+                    
+        # Rescale gradient adequately
+        for layer, param in enumerate(self.model.parameters()):
+            if self.use_naturgrad:
+                if not self.optimize_sigma:
+                    weight_gradients[layer] = self.sigma * weight_gradients[layer]
+                elif self.optimize_sigma == 'single':
+                    weight_gradients[layer] = self.sigma * weight_gradients[layer]
+                    beta_gradients = (self.sigma**2) * beta_gradients
+                elif self.optimize_sigma == 'per-layer':
+                    weight_gradients[layer] = self.sigma[layer] * weight_gradients[layer]
+                    beta_gradients[layer] = (self.sigma[layer]**2) * beta_gradients[layer]
+                elif self.optimize_sigma == 'per-weight':
+                    k = j + param.numel()
+                    weight_gradients[layer] = self.sigma[j:k].view(weight_gradients[layer].size()) * weight_gradients[layer]
+                    beta_gradients[j:k] = (self.sigma[j:k]**2) * beta_gradients[j:k] #TODO: check dimensionality
+                    j = k
+            else:
+                if (not self.optimize_sigma) or (self.optimize_sigma == 'single'):
+                    weight_gradients[layer] = (1/self.sigma) * weight_gradients[layer]
+                elif self.optimize_sigma == 'per-layer':
+                    weight_gradients[layer] = (1/self.sigma[layer]) * weight_gradients[layer]
+                elif self.optimize_sigma == 'per-weight':
+                    k = j + param.numel()
+                    weight_gradients[layer] = (1/self.sigma[j:k].view(weight_gradients[layer].size())) * weight_gradients[layer]
+                    j = k 
 
         # Set gradients
         self.optimizer.zero_grad()
