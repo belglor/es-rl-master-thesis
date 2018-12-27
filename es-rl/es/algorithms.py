@@ -1222,8 +1222,8 @@ class StochasticGradientEstimation(Algorithm):
      
             shaped_returns, shaped_baseline_mu, shaped_baseline_sigma = self.fitness_shaping(workers_out['return'], mu_b_rank, sigma_b_rank)
         
-            #self.compute_gradients(shaped_returns, workers_out['seed'], shaped_baseline_mu, shaped_baseline_sigma)
-            self.compute_gradients(shaped_returns, workers_out['seed'])
+            self.compute_gradients(shaped_returns, workers_out['seed'], shaped_baseline_mu, shaped_baseline_sigma)
+            #self.compute_gradients(shaped_returns, workers_out['seed'])
 
             # Adaptation sampling
             if type(self.optimizer) == torch.optim.SGD and self.adaptation_sampling:
@@ -1839,6 +1839,54 @@ class sNES(sES):
             self._weight_update_scale = 1/self.sigma.mean()**2
             # self._sigma_update_scale = 1/(2*self.sigma.mean()**4)
 
+    def compute_baseline_mu(self, returns, seeds):
+        num = 0
+        denom = 0
+        for i, retrn in enumerate(returns):
+            j = 0
+            # Set random seed, get antithetic multiplier and return
+            sign = np.sign(seeds[i]).float().numpy() #TODO: added recast to numpy 
+            torch.manual_seed(abs(seeds[i]))
+            for layer, param in enumerate(self.model.parameters()):
+                eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer])
+                if (not self.optimize_sigma) or (self.optimize_sigma == 'single'):
+                    num += float((sign * retrn) * eps.pow(2).sum()) / (self.sigma**2) 
+                    denom += eps.pow(2).sum() / (self.sigma**2)
+                elif self.optimize_sigma == 'per-layer':
+                    num += float((sign * retrn) * eps.pow(2).sum()) / (self.sigma[layer]**2) 
+                    denom += eps.pow(2).sum() / (self.sigma[layer]**2)
+                elif self.optimize_sigma == 'per-weight': 
+                    k = j + param.numel()
+                    num += ((sign * retrn * (eps.flatten()**2))/self.sigma[j:k]**2).sum()
+                    denom += ((eps.flatten()**2)/self.sigma[j:k]**2).sum()
+                    j = k
+        baseline_mu = num/denom #TODO: added cast to float because REASONS
+        return baseline_mu 
+    
+    def compute_baseline_sigma(self, returns, seeds):
+        num = 0
+        denom = 0
+        for i, retrn in enumerate(returns):
+            j = 0 
+            # Set random seed, get antithetic multiplier and return
+            sign = np.sign(seeds[i]).float().numpy()
+            torch.manual_seed(abs(seeds[i]))
+            for layer, param in enumerate(self.model.parameters()):
+                eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer])
+                if (not self.optimize_sigma) or (self.optimize_sigma == 'single'):
+                    num += float((sign * retrn) * (eps.pow(2).sum() -1)**2) / (self.sigma**4) 
+                    denom += (eps.pow(2).sum() -1)**2 / (self.sigma**4)
+                elif self.optimize_sigma == 'per-layer':
+                    num += float((sign * retrn) * (eps.pow(2).sum() -1)**2) / (self.sigma[layer]**4) 
+                    denom += (eps.pow(2).sum() -1)**2 / (self.sigma[layer].pow(4).sum())
+                elif self.optimize_sigma == 'per-weight': 
+                    k = j + param.numel()
+                    num += ((sign * retrn * (eps.flatten().pow(2) -1)**2)/self.sigma[j:k]**4).sum()
+                    denom += (eps.pow(2).sum() -1)**2 / (self.sigma[j:k].pow(4).sum())
+                    j = k
+        baseline_sigma = num/denom #added cast to float
+        return baseline_sigma  
+    
     def compute_gradients(self, returns, seeds, baseline_mu=None, baseline_sigma=None):
         """Computes the gradients of the weights of the model wrt. to the return. 
         
@@ -1863,57 +1911,56 @@ class sNES(sES):
             torch.cuda.manual_seed(abs(seeds[i]))
             j = 0 
             for layer, param in enumerate(self.model.parameters()):
+                if baseline_mu is not None:
+                    r_mu = retrn - baseline_mu
+                else:
+                    r_mu = retrn
+                    
+                if baseline_sigma is not None:
+                    r_s = retrn - baseline_sigma
+                else:
+                    r_s = retrn
+                    
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer], cuda=self.cuda)
                 if not self.optimize_sigma:
-                    weight_gradients[layer] += (sign * retrn * eps) / self.perturbations
-                elif self.optimize_sigma == 'single':
-                    weight_gradients[layer] += (sign * retrn * eps) / self.perturbations
-                    beta_gradients += float(retrn * (eps.pow(2).sum() - eps.numel()))/ self.perturbations
+                    weight_gradients[layer] += (sign * r_mu * eps) / (self.perturbations * self.sigma)
+                if self.optimize_sigma == 'single':
+                    weight_gradients[layer] += (sign * r_mu * eps) / (self.perturbations * self.sigma)
+                    beta_gradients += float(r_s * (eps.pow(2).sum() - eps.numel())) / self.perturbations
                 elif self.optimize_sigma == 'per-layer':
-                    weight_gradients[layer] += (sign * retrn * eps) / self.perturbations
-                    beta_gradients[layer] += float(retrn * (eps.pow(2).sum() - eps.numel())) / self.perturbations #TODO: added float cast because REASONS
+                    weight_gradients[layer] += (sign * r_mu * eps) / (self.perturbations * self.sigma[layer])
+                    beta_gradients[layer] += float(r_s * (eps.pow(2).sum() - eps.numel())) / self.perturbations
                 elif self.optimize_sigma == 'per-weight':
                     k = j + param.numel()
-                    weight_gradients[layer] += (sign * retrn * eps) / self.perturbations
-                    beta_gradients[j:k] += retrn * (eps.view(-1).pow(2) - 1) / self.perturbations
+                    weight_gradients[layer] += (sign * r_mu * eps) / (self.perturbations * self.sigma[j:k].view(weight_gradients[layer].size()))
+                    beta_gradients[j:k] += r_s * (eps.view(-1).pow(2) - 1) / self.perturbations
                     j = k
-                    
-        # Rescale gradient adequately
-        for layer, param in enumerate(self.model.parameters()):
-            if self.use_naturgrad:
-                if not self.optimize_sigma:
-                    weight_gradients[layer] = self.sigma * weight_gradients[layer]
-                elif self.optimize_sigma == 'single':
-                    weight_gradients[layer] = self.sigma * weight_gradients[layer]
-                    beta_gradients = (self.sigma**2) * beta_gradients
-                elif self.optimize_sigma == 'per-layer':
-                    weight_gradients[layer] = self.sigma[layer] * weight_gradients[layer]
-                    beta_gradients[layer] = (self.sigma[layer]**2) * beta_gradients[layer]
-                elif self.optimize_sigma == 'per-weight':
-                    k = j + param.numel()
-                    weight_gradients[layer] = self.sigma[j:k].view(weight_gradients[layer].size()) * weight_gradients[layer]
-                    beta_gradients[j:k] = (self.sigma[j:k]**2) * beta_gradients[j:k] #TODO: check dimensionality
-                    j = k
-            else:
-                if (not self.optimize_sigma) or (self.optimize_sigma == 'single'):
-                    weight_gradients[layer] = (1/self.sigma) * weight_gradients[layer]
-                elif self.optimize_sigma == 'per-layer':
-                    weight_gradients[layer] = (1/self.sigma[layer]) * weight_gradients[layer]
-                elif self.optimize_sigma == 'per-weight':
-                    k = j + param.numel()
-                    weight_gradients[layer] = (1/self.sigma[j:k].view(weight_gradients[layer].size())) * weight_gradients[layer]
-                    j = k 
 
         # Set gradients
+        j = 0
         self.optimizer.zero_grad()
         for layer, param in enumerate(self.model.parameters()):
-            param.grad.data = - weight_gradients[layer]
+            if self.use_naturgrad:
+                if (not self.optimize_sigma) or (self.optimize_sigma == 'single'):
+                    param.grad.data = - (self.sigma) * weight_gradients[layer]
+                elif self.optimize_sigma == 'per-layer':
+                    param.grad.data = - (self.sigma[layer]) * weight_gradients[layer]
+                elif self.optimize_sigma == 'per-weight':
+                    k = j + param.numel()
+                    param.grad.data = - ((self.sigma[j:k]).view(weight_gradients[layer].size())) * weight_gradients[layer]
+                    j = k
+            else:
+                param.grad.data = - weight_gradients[layer]
             assert not np.isnan(param.grad.data).any()
             assert not np.isinf(param.grad.data).any()
         if self.optimize_sigma:
-            self.beta.grad = - Variable(beta_gradients, requires_grad=True)
+            if self.use_naturgrad:
+                self.beta.grad = - (self.sigma**2) * Variable(beta_gradients, requires_grad=True)
+            else:
+                self.beta.grad = - Variable(beta_gradients, requires_grad=True)
             assert not np.isnan(self.beta.grad.data).any()
             assert not np.isinf(self.beta.grad.data).any()
+        print()
 
 
 class Backprop(Algorithm):
