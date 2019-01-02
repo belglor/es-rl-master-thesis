@@ -886,7 +886,7 @@ class Algorithm(object):
 
 #%%
 class StochasticGradientEstimation(Algorithm):
-    def __init__(self, model, env, optimizer, lr_scheduler, eval_fun, perturbations, batch_size, max_generations, safe_mutation, no_antithetic, baseline_mu, baseline_sigma, small_sigma, **kwargs):
+    def __init__(self, model, env, optimizer, lr_scheduler, eval_fun, perturbations, batch_size, max_generations, safe_mutation, no_antithetic, baseline_mu, baseline_sigma, small_sigma, no_ranktransform, **kwargs):
         super(StochasticGradientEstimation, self).__init__(model, env, optimizer, lr_scheduler, eval_fun, perturbations, batch_size, max_generations, safe_mutation, no_antithetic, **kwargs)
         self.baseline_mu = baseline_mu
         self.baseline_sigma = baseline_sigma
@@ -894,6 +894,8 @@ class StochasticGradientEstimation(Algorithm):
         
         self.stats['baseline_mu'] = []
         self.stats['baseline_sigma'] = []
+        
+        self.no_ranktransform = no_ranktransform
         
     def _store_stats(self, mu_b, sigma_b, *args):
         super(StochasticGradientEstimation, self)._store_stats(*args)
@@ -1220,7 +1222,13 @@ class StochasticGradientEstimation(Algorithm):
             #TODO: introduce baselines computations
             mu_b, mu_b_rank, sigma_b, sigma_b_rank = self.get_baselines(workers_out['return'], workers_out['seed'], unperturbed_out['return'], rank)
      
-            shaped_returns, shaped_baseline_mu, shaped_baseline_sigma = self.fitness_shaping(workers_out['return'], mu_b_rank, sigma_b_rank)
+            #TODO: check if rank transform or not
+            if self.no_ranktransform:
+                shaped_returns = workers_out['return']
+                shaped_baseline_mu = mu_b
+                shaped_baseline_sigma = sigma_b
+            else:            
+                shaped_returns, shaped_baseline_mu, shaped_baseline_sigma = self.fitness_shaping(workers_out['return'], mu_b_rank, sigma_b_rank)
         
             self.compute_gradients(shaped_returns, workers_out['seed'], shaped_baseline_mu, shaped_baseline_sigma)
             #self.compute_gradients(shaped_returns, workers_out['seed'])
@@ -1477,6 +1485,7 @@ class ES(StochasticGradientEstimation):
         s += "Use MU baseline       {:s}\n".format(str(self.baseline_mu))
         s += "Use SIGMA baseline    {:s}\n".format(str(self.baseline_sigma))
         s += "Use natural gradient  {:s}\n".format(str(self.use_naturgrad))
+        s += "Reshape rewards  {:s}\n".format(str(self.no_ranktransform))
         if self.chkpt_dir is not None:
             with open(os.path.join(self.chkpt_dir, 'init.log'), 'a') as f:
                 f.write(s + "\n\n")
@@ -1788,6 +1797,7 @@ class sES(StochasticGradientEstimation):
         s += "Use MU baseline       {:s}\n".format(str(self.baseline_mu))
         s += "Use SIGMA baseline    {:s}\n".format(str(self.baseline_sigma))
         s += "Use natural gradient  {:s}\n".format(str(self.use_naturgrad))
+        s += "Do not rank transform {:s}\n".format(str(self.no_ranktransform))
         if self.chkpt_dir is not None:
             with open(os.path.join(self.chkpt_dir, 'init.log'), 'a') as f:
                 f.write(s + "\n\n")
@@ -1899,10 +1909,45 @@ class sNES(sES):
         
         # Preallocate list with gradients
         weight_gradients = []
+        
+        estim_mu_var = []
+        var_mu_change = []
+        estim_sigma_var = []
+        var_sigma_change = []
+        
+        mu_var_t1 = []
+        mu_var_t2 = []
+        sigma_var_t1 = []
+        sigma_var_t2 = []
+        
+        var_mu_num = []
+        var_mu_denom = []
+        var_sigma_num = []
+        var_sigma_denom = []
+        
         for param in self.model.parameters():
             weight_gradients.append(torch.zeros(param.data.size()))
+            
+            estim_mu_var.append(np.zeros(param.data.size()))
+            var_mu_change.append(np.zeros(param.data.size()))
+            
+            mu_var_t1.append(np.zeros(param.data.size()))
+            mu_var_t2.append(np.zeros(param.data.size()))
+            
+            var_mu_num.append(np.zeros(param.data.size()))
+            var_mu_denom.append(np.zeros(param.data.size()))
+            
+            estim_sigma_var.append(np.zeros(param.data.size()))
+            var_sigma_change.append(np.zeros(param.data.size()))
+    
+            sigma_var_t1.append(np.zeros(param.data.size()))
+            sigma_var_t2.append(np.zeros(param.data.size()))
+        
+            var_sigma_num.append(np.zeros(param.data.size()))
+            var_sigma_denom.append(np.zeros(param.data.size()))
+            
         beta_gradients = torch.zeros(self.beta.size())
-
+        
         # Compute gradients
         for i, retrn in enumerate(returns):
             # Set random seed, get antithetic multiplier and return
@@ -1922,6 +1967,34 @@ class sNES(sES):
                     r_s = retrn
                     
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer], cuda=self.cuda)
+                
+                if (not self.optimize_sigma) or (self.optimize_sigma == 'single'):
+                    s = self.sigma
+                elif self.optimize_sigma == 'per-layer':
+                    s = self.sigma[layer]
+                elif self.optimize_sigma == 'per-weight':
+                    k1 = j + param.numel()
+                    s =  self.sigma[j:k1].view(weight_gradients[layer].size())
+                
+                l_mu = (eps / s)#store the log-likelihood
+                ll_mu = (eps.pow(2) / s**2)# store l*l^T #TODO adapt for separable sigmas
+                l_sigma = ((eps.pow(2) - 1)/ s**2)
+                ll_sigma = (l_sigma**2)    
+                
+                mu_var_t1[layer] += (1 / self.perturbations) * (r_mu**2 * ll_mu)
+                mu_var_t2[layer] += (1 / self.perturbations) * (r_mu* l_mu)
+                
+                sigma_var_t1[layer] += (1 / self.perturbations) * (r_s**2 * ll_sigma)
+                sigma_var_t2[layer] += (1 / self.perturbations) * (r_s * l_sigma)
+                
+                if baseline_mu is not None:
+                    var_mu_num[layer] += (1 / self.perturbations) * r_mu * ll_mu
+                    var_mu_denom[layer] += (1 / self.perturbations) * ll_mu
+                
+                if baseline_sigma is not None:
+                    var_sigma_num[layer] += (1 / self.perturbations) * r_s * ll_sigma
+                    var_sigma_denom[layer] += (1 / self.perturbations) * ll_sigma
+                        
                 if not self.optimize_sigma:
                     weight_gradients[layer] += (sign * r_mu * eps) / (self.perturbations * self.sigma)
                 if self.optimize_sigma == 'single':
@@ -1935,7 +2008,15 @@ class sNES(sES):
                     weight_gradients[layer] += (sign * r_mu * eps) / (self.perturbations * self.sigma[j:k].view(weight_gradients[layer].size()))
                     beta_gradients[j:k] += r_s * (eps.view(-1).pow(2) - 1) / self.perturbations
                     j = k
-
+        
+        #Accumulate variance estimators
+        mu_var = np.array(mu_var_t1) - (np.array(mu_var_t2)**2)
+        sigma_var = np.array(sigma_var_t1) - (np.array(sigma_var_t2)**2)   
+        if baseline_mu is not None:
+            mu_change = 2 * (np.array(var_mu_num)**2) / np.array(var_mu_denom)
+        if baseline_sigma is not None:
+            sigma_change = 2 * (np.array(var_sigma_num)**2) / np.array(var_sigma_denom)        
+                
         # Set gradients
         j = 0
         self.optimizer.zero_grad()

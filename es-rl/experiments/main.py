@@ -112,7 +112,8 @@ def parse_inputs():
 
     #Use natural gradient
     parser.add_argument('--use-naturgrad', action='store_true', default=False, help='Use natural gradient')
-
+    parser.add_argument('--no-ranktransform', action='store_true', default=False, help='Do not reshape rewards')
+    
     args = parser.parse_args()
     return args
 
