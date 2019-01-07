@@ -1530,20 +1530,37 @@ class sES(StochasticGradientEstimation):
         super(sES, self).__init__(model, env, optimizer, lr_scheduler, eval_fun, perturbations, batch_size, max_generations, safe_mutation, no_antithetic, **kwargs)
         assert optimize_sigma in [None, 'single', 'per-layer', 'per-weight'], "Expected `self.optimize_sigma` to be one of [None, 'single', 'per-layer', 'per-weight'] but was {}".format(self.optimize_sigma)
         self.optimize_sigma = optimize_sigma
+        
+#        # Add change in mu variance if baseline
+#        self.stats['mu_var'] = []
+#        self.stats['mu_var_change'] = []    
+#        self.stats['var_s_avg'] = []
+#        self.stats['var_s_std']  = []
+#        self.stats['var_s_change_avg'] = []
+#        self.stats['var_s_change_std']  = [] 
         # Add sigma to stats
         if self.optimize_sigma == 'per-weight':
             sigma_keys = ['sigma_avg', 'sigma_min', 'sigma_max', 'sigma_med', 'sigma_std']
             beta_keys = ['beta_avg', 'beta_min', 'beta_max', 'beta_med', 'beta_std']
+            estim_sigma_var_keys = ['var_s_min', 'var_s_max']
+            estim_sigma_var_change_keys = ['var_s_change_min', 'var_s_change_max']
         elif self.optimize_sigma == 'per-layer':
             n = self.model.count_tensors(only_trainable=True)
             sigma_keys = ['sigma_' + str(i) for i in range(n)]
             beta_keys = ['beta_' + str(i) for i in range(n)]
+            estim_sigma_var_keys = ['var_sigma_' + str(i) for i in range(n)]
+            estim_sigma_var_change_keys = ['var_change_sigma_' + str(i) for i in range(n)]
         else:
             sigma_keys = ['sigma']
             beta_keys = ['beta']
+            estim_sigma_var_keys = ['var_sigma']
+            estim_sigma_var_change_keys = ['var_sigma_change']
         for sk, bk in zip(sigma_keys, beta_keys):
             self.stats[sk] = []
             self.stats[bk] = []
+#        for svk, sck in zip(estim_sigma_var_keys, estim_sigma_var_change_keys):
+#            self.stats[svk] = []
+#            self.stats[sck] = []
         # Add sigma to optimizer and lr_scheduler
         beta = self._sigma2beta(sigma)
         if self.optimize_sigma is None:
@@ -1580,15 +1597,6 @@ class sES(StochasticGradientEstimation):
             
         ########################################
         self.use_naturgrad = use_naturgrad
-
-    def _store_stats(self, *args):
-        super(sES, self)._store_stats(*args)
-        if self.optimize_sigma is not None:
-            self.stats['sigma'].append(self.sigma.numpy())
-            self.stats['beta'].append(self.beta.data[0].numpy())
-        else:
-            self.stats['sigma'].append(self.sigma)
-            self.stats['beta'].append(self.beta.data[0])
 
     @property
     def beta(self):
@@ -1818,11 +1826,15 @@ class sES(StochasticGradientEstimation):
         if (self.optimize_sigma is None) or (self.optimize_sigma == 'single'):
             self.stats['sigma'].append(self.sigma.view(-1)[0].numpy())
             self.stats['beta'].append(self.beta.data.view(-1)[0].numpy())
+            
+            
         elif self.optimize_sigma == 'per-layer':
             for i, s in enumerate(self.sigma):
                 self.stats['sigma_' + str(i)].append(s.numpy())
             for i, b in enumerate(self.beta.data):
                 self.stats['beta_' + str(i)].append(b.numpy())
+                
+                
         elif self.optimize_sigma == 'per-weight':
             # Compute mean, min, max, median and std
             self.stats['sigma_avg'].append(self.sigma.mean().numpy())
@@ -1910,41 +1922,30 @@ class sNES(sES):
         # Preallocate list with gradients
         weight_gradients = []
         
-        estim_mu_var = []
-        var_mu_change = []
-        estim_sigma_var = []
-        var_sigma_change = []
-        
-        mu_var_t1 = []
-        mu_var_t2 = []
-        sigma_var_t1 = []
-        sigma_var_t2 = []
-        
-        var_mu_num = []
-        var_mu_denom = []
-        var_sigma_num = []
-        var_sigma_denom = []
+#        mu_var_t1 = []
+#        mu_var_t2 = []
+#        sigma_var_t1 = []
+#        sigma_var_t2 = []
+#        
+#        var_mu_num = []
+#        var_mu_denom = []
+#        var_sigma_num = []
+#        var_sigma_denom = []
         
         for param in self.model.parameters():
             weight_gradients.append(torch.zeros(param.data.size()))
-            
-            estim_mu_var.append(np.zeros(param.data.size()))
-            var_mu_change.append(np.zeros(param.data.size()))
-            
-            mu_var_t1.append(np.zeros(param.data.size()))
-            mu_var_t2.append(np.zeros(param.data.size()))
-            
-            var_mu_num.append(np.zeros(param.data.size()))
-            var_mu_denom.append(np.zeros(param.data.size()))
-            
-            estim_sigma_var.append(np.zeros(param.data.size()))
-            var_sigma_change.append(np.zeros(param.data.size()))
-    
-            sigma_var_t1.append(np.zeros(param.data.size()))
-            sigma_var_t2.append(np.zeros(param.data.size()))
-        
-            var_sigma_num.append(np.zeros(param.data.size()))
-            var_sigma_denom.append(np.zeros(param.data.size()))
+
+#            mu_var_t1.append(np.zeros(param.data.size()))
+#            mu_var_t2.append(np.zeros(param.data.size()))
+#            
+#            var_mu_num.append(np.zeros(param.data.size()))
+#            var_mu_denom.append(np.zeros(param.data.size()))          
+#    
+#            sigma_var_t1.append(np.zeros(param.data.size()))
+#            sigma_var_t2.append(np.zeros(param.data.size()))
+#        
+#            var_sigma_num.append(np.zeros(param.data.size()))
+#            var_sigma_denom.append(np.zeros(param.data.size()))
             
         beta_gradients = torch.zeros(self.beta.size())
         
@@ -1957,14 +1958,14 @@ class sNES(sES):
             j = 0 
             for layer, param in enumerate(self.model.parameters()):
                 if baseline_mu is not None:
-                    r_mu = retrn - baseline_mu
+                    r_mu = float(retrn - baseline_mu)
                 else:
-                    r_mu = retrn
+                    r_mu = float(retrn)
                     
                 if baseline_sigma is not None:
-                    r_s = retrn - baseline_sigma
+                    r_s = float(retrn - baseline_sigma)
                 else:
-                    r_s = retrn
+                    r_s = float(retrn)
                     
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer], cuda=self.cuda)
                 
@@ -1976,25 +1977,26 @@ class sNES(sES):
                     k1 = j + param.numel()
                     s =  self.sigma[j:k1].view(weight_gradients[layer].size())
                 
-                l_mu = (eps / s)#store the log-likelihood
-                ll_mu = (eps.pow(2) / s**2)# store l*l^T #TODO adapt for separable sigmas
-                l_sigma = ((eps.pow(2) - 1)/ s**2)
-                ll_sigma = (l_sigma**2)    
-                
-                mu_var_t1[layer] += (1 / self.perturbations) * (r_mu**2 * ll_mu)
-                mu_var_t2[layer] += (1 / self.perturbations) * (r_mu* l_mu)
-                
-                sigma_var_t1[layer] += (1 / self.perturbations) * (r_s**2 * ll_sigma)
-                sigma_var_t2[layer] += (1 / self.perturbations) * (r_s * l_sigma)
-                
-                if baseline_mu is not None:
-                    var_mu_num[layer] += (1 / self.perturbations) * r_mu * ll_mu
-                    var_mu_denom[layer] += (1 / self.perturbations) * ll_mu
-                
-                if baseline_sigma is not None:
-                    var_sigma_num[layer] += (1 / self.perturbations) * r_s * ll_sigma
-                    var_sigma_denom[layer] += (1 / self.perturbations) * ll_sigma
-                        
+#                l_mu = (eps / s)#store the log-likelihood
+#                ll_mu = (eps.pow(2) / s**2)# store l*l^T #TODO adapt for separable sigmas
+#                l_sigma = ((eps.pow(2) - 1)/ (2 * s**2))
+#                ll_sigma = (l_sigma**2)    
+#                
+#                #TODO: this is the loglikelihood for the estimator of sigma^2! Not just sigma
+#                mu_var_t1[layer] += (1 / self.perturbations) * (r_mu**2 * ll_mu)
+#                mu_var_t2[layer] += (1 / self.perturbations) * (r_mu* l_mu)
+#                
+#                sigma_var_t1[layer] += (1 / self.perturbations) * (r_s**2 * ll_sigma)
+#                sigma_var_t2[layer] += (1 / self.perturbations) * (r_s * l_sigma)
+#                
+#                if baseline_mu is not None:
+#                    var_mu_num[layer] += (1 / self.perturbations) * r_mu * ll_mu
+#                    var_mu_denom[layer] += (1 / self.perturbations) * ll_mu
+#                
+#                if baseline_sigma is not None:
+#                    var_sigma_num[layer] += (1 / self.perturbations) * r_s * ll_sigma
+#                    var_sigma_denom[layer] += (1 / self.perturbations) * ll_sigma
+                      
                 if not self.optimize_sigma:
                     weight_gradients[layer] += (sign * r_mu * eps) / (self.perturbations * self.sigma)
                 if self.optimize_sigma == 'single':
@@ -2009,14 +2011,89 @@ class sNES(sES):
                     beta_gradients[j:k] += r_s * (eps.view(-1).pow(2) - 1) / self.perturbations
                     j = k
         
-        #Accumulate variance estimators
-        mu_var = np.array(mu_var_t1) - (np.array(mu_var_t2)**2)
-        sigma_var = np.array(sigma_var_t1) - (np.array(sigma_var_t2)**2)   
-        if baseline_mu is not None:
-            mu_change = 2 * (np.array(var_mu_num)**2) / np.array(var_mu_denom)
-        if baseline_sigma is not None:
-            sigma_change = 2 * (np.array(var_sigma_num)**2) / np.array(var_sigma_denom)        
-                
+#        #Accumulate variance estimators
+#        mu_var = np.array(mu_var_t1) - (np.array(mu_var_t2)**2)
+#        sigma_var = np.array(sigma_var_t1) - (np.array(sigma_var_t2)**2)   
+#
+#        #TODO: for mu estimator, we estimate the variance across all mu parameters (do not spearate as per sigma)
+#        flat_mu_var = np.array([])
+#        for mu_i in mu_var:
+#            flat_mu_var = np.concatenate((flat_mu_var, mu_i.flatten()))
+#        estim_mu_var = np.mean(flat_mu_var)
+#        
+#        if baseline_mu is not None:
+#            mu_change = 2 * (np.array(var_mu_num)**2) / np.array(var_mu_denom)
+#            flat_mu_change = np.array([])
+#            for mu_change_i in mu_change:
+#                flat_mu_change = np.concatenate((flat_mu_change, mu_change_i.flatten()))
+#            estim_mu_var_change = np.mean(flat_mu_change)
+#        else:
+#            estim_mu_var_change = 0            
+#         
+#        if baseline_sigma is not None:
+#            sigma_change = 2 * (np.array(var_sigma_num)**2) / np.array(var_sigma_denom)
+#            if self.optimize_sigma == 'per-layer':
+#                estim_sigma_var_change = np.array([])
+#                for sigma_change_i in sigma_change:
+#                    estim_sigma_var_change = np.concatenate((estim_sigma_var_change, [np.mean(sigma_change_i.flatten())]))
+#            else:
+#                if not self.optimize_sigma:
+#                    estim_sigma_var_change = 0
+#                flat_sigma_var_change = np.array([])
+#                for sigma_change_i in sigma_change:
+#                    flat_sigma_var_change = np.concatenate((flat_sigma_var_change, sigma_change_i.flatten()))
+#                if self.optimize_sigma == 'single':
+#                    estim_sigma_var_change = np.mean(flat_sigma_var_change)
+#                elif self.optimize_sigma == 'per-weight':
+#                    estim_sigma_var_change = flat_sigma_var_change
+#                    
+#        else:
+#            
+#            estim_sigma_var_change = 0
+#            
+#        if self.optimize_sigma == 'per-layer':
+#            estim_sigma_var = np.array([])
+#            for sigma_i in sigma_var:
+#                estim_sigma_var = np.concatenate((estim_sigma_var, [np.mean(sigma_i.flatten())]))
+#        else:
+#            if not self.optimize_sigma:
+#                estim_sigma_var = 0                
+#            flat_sigma_var = np.array([])
+#            for sigma_i in sigma_var:
+#                flat_sigma_var = np.concatenate((flat_sigma_var, sigma_i.flatten()))
+#            if self.optimize_sigma == 'single':
+#                estim_sigma_var = np.mean(flat_sigma_var)
+#            elif self.optimize_sigma == 'per-weight':
+#                estim_sigma_var = flat_sigma_var
+#        print()
+#        
+#        #Store variance information 
+#        self.stats['mu_var'].append(estim_mu_var)
+#        self.stats['mu_var_change'].append(estim_mu_var_change)
+#        self.stats['var_s_avg'].append(np.mean(estim_sigma_var))
+#        self.stats['var_s_std'].append(np.std(estim_sigma_var))
+#        self.stats['var_s_change_avg'].append(np.mean(estim_sigma_var_change))
+#        self.stats['var_s_change_std'].append(np.std(estim_sigma_var_change))
+#        if (self.optimize_sigma is None) or (self.optimize_sigma == 'single'):
+#            self.stats['var_sigma'].append(estim_sigma_var)
+#            self.stats['var_sigma_change'].append(estim_sigma_var_change)  
+#            
+#        elif self.optimize_sigma == 'per-layer':
+#            for i, sv in enumerate(estim_sigma_var):
+#                self.stats['var_sigma_' + str(i)].append(sv)
+#            if self.baseline_sigma:
+#                for i, svc in enumerate(estim_sigma_var_change):
+#                    self.stats['var_change_sigma_' + str(i)].append(svc)  
+#            else: #to take into account the case with no baseline
+#                for i, sv in enumerate(estim_sigma_var):
+#                    self.stats['var_change_sigma_' + str(i)].append(0)
+#        elif self.optimize_sigma == 'per-weight':
+#            # Compute mean, min, max, median and std
+#            self.stats['var_s_min'].append(np.min(estim_sigma_var))
+#            self.stats['var_s_max'].append(np.max(estim_sigma_var))
+#            self.stats['var_s_change_min'].append(np.min(estim_sigma_var_change))
+#            self.stats['var_s_change_max'].append(np.max(estim_sigma_var_change))
+#            
         # Set gradients
         j = 0
         self.optimizer.zero_grad()

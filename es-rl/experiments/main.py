@@ -284,11 +284,11 @@ def test_model(args):
 
 
 if __name__ == '__main__':
-    #TODO: manual seed, te remove when sending to queue
-    master_seed = 42
-    random.seed(master_seed)
-    torch.manual_seed(master_seed)
-    np.random.seed(master_seed)
+#    #TODO: manual seed, te remove when sending to queue
+#    master_seed = 42
+#    random.seed(master_seed)
+#    torch.manual_seed(master_seed)
+#    np.random.seed(master_seed)
     
     # Parse and validate
     args = parse_inputs()
