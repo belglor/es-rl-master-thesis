@@ -55,7 +55,7 @@ def create_plots(stats_list, keys_to_plot, groups, result_dir, include_val=True)
         plot.timeseries_mean_grouped(list_of_genera, list_of_series, groups, xlabel='generations', ylabel=k, map_labels='supervised')
         #TODO: set ylim for loglikelihood, leave without lims for RL
         if 'return' in k:
-            plt.gca().set_ylim(0, 2)
+            plt.gca().set_ylim(0, 3)
 #        elif 'accuracy' in k:
 #            plt.gca().set_ylim(0.3, 1)
         plt.savefig(os.path.join(result_dir, k + '-all-series-mean-sd' + '.pdf'), bbox_inches='tight')
@@ -100,13 +100,13 @@ def analyze(experiment_id, optimizer, keys_to_plot):
             
             #Add env string
             if 'MNIST' in s:
-            	g += 'MNIST'
+                	g += 'MNIST'
             elif 'CartPole' in s:
-            	g += 'CartPole'
+                	g += 'CartPole'
             elif 'Freeway' in s:
-            	g += 'Freeway'
+                	g += 'Freeway'
             elif 'Seaquest' in s:
-            	g += 'Seaquest'
+                	g += 'Seaquest'
         		
             #Add opt sigma string
             if 'single' in s:
