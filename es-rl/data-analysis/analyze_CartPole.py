@@ -55,7 +55,7 @@ def create_plots(stats_list, keys_to_plot, groups, result_dir, include_val=True)
         plot.timeseries_mean_grouped(list_of_genera, list_of_series, groups, xlabel='generations', ylabel=k, map_labels='reinforcement')
         #TODO: set ylim for loglikelihood, leave without lims for RL
 #        if 'return' in k:
-#            plt.gca().set_ylim(0, 2)
+#            plt.gca().set_ylim(0, 3)
 #        elif 'accuracy' in k:
 #            plt.gca().set_ylim(0.3, 1)
         plt.savefig(os.path.join(result_dir, k + '-all-series-mean-sd' + '.pdf'), bbox_inches='tight')
@@ -97,15 +97,28 @@ def analyze(experiment_id, optimizer, keys_to_plot):
                 s = f.read()   
                 
             g = ''
+            
+            #Add env string
+            if 'MNIST' in s:
+                	g += 'MNIST'
+            elif 'CartPole' in s:
+                	g += 'CartPole'
+            elif 'Freeway' in s:
+                	g += 'Freeway'
+            elif 'Seaquest' in s:
+                	g += 'Seaquest'
+        		
+            #Add opt sigma string
             if 'single' in s:
-                g += 'single_sigma'
+                g += '_single_sigma'
             elif 'per-layer' in s:
-                g += 'per-layer_sigma'
+                g += '_per-layer_sigma'
             elif 'per-weight' in s:
-                g += 'per-weight_sigma'
+                g += '_per-weight_sigma'
             else:
-                g += 'nosigma'
-                
+                g += '_nosigma'
+            
+            #Add opt strings 
             if 'Use MU baseline       True' in s:
                 g += '_baseline'
                 
@@ -114,6 +127,7 @@ def analyze(experiment_id, optimizer, keys_to_plot):
                 
             if 'initial_lr: 1.0' in s:
                 g += '_lr1'
+                
             groups = np.append(groups, g + optimizer)
 
             stats.append(st)                
@@ -131,7 +145,7 @@ def analyze(experiment_id, optimizer, keys_to_plot):
     # Plot
     invert_signs(stats)
     create_plots(stats, keys_to_plot, groups, result_dir, include_val=False)
-    copy_tree(result_dir, dst_dir)
+    #copy_tree(result_dir, dst_dir)
 
 
 if __name__ == '__main__':
@@ -140,13 +154,12 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    experiment_ids = ['E008-Seaquest_no_sigma', 'E009-Seaquest_sigma_single', 'E010-Seaquest_sigma_per-layer', 'E011-Seaquest_sigma_per-weight']
-    #experiment_ids = ['E010-Seaquest_sigma_per-layer']
+    experiment_ids = ['E008-CartPole_none', 'E009-CartPole_none_no_ranktransform', 'E010-CartPole_single', 'E011-CartPole_single_no_ranktransform', 'E012-CartPole_per-layer', 'E013-CartPole_per-layer_no_ranktransform', 'E014-CartPole_per-weight', 'E015-CartPole_per-weight_no_ranktransform']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
-    optimizers = ['', '', '', '']
+    optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']
     # Keys to analyze
-    keys_to_plot = ['return_unp', 'return_avg']
+    keys_to_plot = ['return_unp', 'return_avg', 'grad_norm', 'param_norm']
     # Analyze
     for experiment_id, optimizer in zip(experiment_ids, optimizers):
         analyze(experiment_id, optimizer, keys_to_plot)

@@ -165,7 +165,7 @@ def supervised_eval(model, train_loader, random_seed, mseed=None, silent=False, 
 #    retrn = retrn.data.numpy()[0]
     retrn = retrn.data.numpy()
     pred = output.data.max(1, keepdim=True)[1]  # get the index of the max log-probability
-    accuracy = pred.eq(target.data.view_as(pred)).sum()/target.data.size()[0]
+    accuracy = pred.eq(target.data.view_as(pred)).sum().float()/target.data.size()[0] #TODO: added cast to FloatTensor, because it was LonTensor thus it was performing integer division
     out = {'seed': random_seed, 'return': retrn, 'observations': data.data.size()[0], 'accuracy': accuracy.item()} #TODO added .item() to accuracy store to avoid storing tensors. Will it break?
     if collect_inputs:
         # NOTE It is necessary to convert the torch.autograd.Variable to numpy array 
