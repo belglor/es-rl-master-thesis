@@ -58,7 +58,7 @@ def create_plots(stats_list, keys_to_plot, groups, result_dir, include_val=True)
 #            plt.gca().set_ylim(0, 3)
 #        elif 'accuracy' in k:
 #            plt.gca().set_ylim(0.3, 1)
-        plt.savefig(os.path.join(result_dir, k + '-all-series-mean-sd' + '.pdf'), bbox_inches='tight')
+        plt.savefig(os.path.join(result_dir, k + '_' + groups[0] +'_varadapt' + '.pdf'), bbox_inches='tight')
         plt.close()
         # Progress
         if i_key + 1 == n_keys:

@@ -58,7 +58,7 @@ def create_plots(stats_list, keys_to_plot, groups, result_dir, include_val=True)
             plt.gca().set_ylim(0, 3)
 #        elif 'accuracy' in k:
 #            plt.gca().set_ylim(0.3, 1)
-        plt.savefig(os.path.join(result_dir, k + '_' + groups[0] +'_varadapt' + '.pdf'), bbox_inches='tight')
+        plt.savefig(os.path.join(result_dir, k + '_' + groups[0] +'_baseline' + '.pdf'), bbox_inches='tight')
         plt.close()
         # Progress
         if i_key + 1 == n_keys:
@@ -154,8 +154,7 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    experiment_ids = ['C001-MNIST_adapt']
-    #experiment_ids = ['E010-Seaquest_sigma_per-layer']
+    experiment_ids = ['D001-MNIST_none_baseline', 'D002-MNIST_single_baseline', 'D003-MNIST_pl_baseline', 'D004-MNIST_pw_baseline']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']

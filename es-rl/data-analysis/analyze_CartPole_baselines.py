@@ -52,13 +52,13 @@ def create_plots(stats_list, keys_to_plot, groups, result_dir, include_val=True)
         groups.sort()
 
         # Plot
-        plot.timeseries_mean_grouped(list_of_genera, list_of_series, groups, xlabel='generations', ylabel=k, map_labels='supervised')
+        plot.timeseries_mean_grouped(list_of_genera, list_of_series, groups, xlabel='generations', ylabel=k, map_labels='reinforcement')
         #TODO: set ylim for loglikelihood, leave without lims for RL
-        if 'return' in k:
-            plt.gca().set_ylim(0, 3)
+#        if 'return' in k:
+#            plt.gca().set_ylim(0, 3)
 #        elif 'accuracy' in k:
 #            plt.gca().set_ylim(0.3, 1)
-        plt.savefig(os.path.join(result_dir, k + '_' + groups[0] +'_varadapt' + '.pdf'), bbox_inches='tight')
+        plt.savefig(os.path.join(result_dir, k + '_' + groups[0] +'_baseline' + '.pdf'), bbox_inches='tight')
         plt.close()
         # Progress
         if i_key + 1 == n_keys:
@@ -154,13 +154,12 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    experiment_ids = ['C001-MNIST_adapt']
-    #experiment_ids = ['E010-Seaquest_sigma_per-layer']
+    experiment_ids = ['D005-CartPole_none_baseline', 'D006-Cartpole_single_baseline', 'D007-Cartpole_pl_baseline', 'D008-CartPole_pw_baseline']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']
     # Keys to analyze
-    keys_to_plot = ['return_unp', 'return_avg', 'accuracy_avg', 'accuracy_unp', 'grad_norm', 'param_norm']
+    keys_to_plot = ['return_unp', 'return_avg', 'grad_norm', 'param_norm']
     # Analyze
     for experiment_id, optimizer in zip(experiment_ids, optimizers):
         analyze(experiment_id, optimizer, keys_to_plot)

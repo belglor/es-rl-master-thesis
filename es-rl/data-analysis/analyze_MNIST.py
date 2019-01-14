@@ -161,7 +161,7 @@ if __name__ == '__main__':
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']
     # Keys to analyze
-    keys_to_plot = ['return_unp', 'return_avg', 'grad_norm', 'param_norm']
+    keys_to_plot = ['return_unp', 'return_avg', 'accuracy_avg', 'accuracy_unp', 'grad_norm', 'param_norm']
     # Analyze
     for experiment_id, optimizer in zip(experiment_ids, optimizers):
         analyze(experiment_id, optimizer, keys_to_plot)
