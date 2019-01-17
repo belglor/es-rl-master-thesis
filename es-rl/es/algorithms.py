@@ -1321,7 +1321,7 @@ class ES(StochasticGradientEstimation):
             beta_val = self._sigma2beta(sigma)
             lr = cov_lr if cov_lr else self.lr_scheduler.get_lr()[0]
             beta_par = {'label': '_beta', 'params': Variable(torch.Tensor([beta_val]), requires_grad=True),
-                        'lr': lr, 'weight_decay': 0, 'momentum': 0.9, 'dampening': 0.9}
+                        'lr': lr, 'weight_decay': 0, 'momentum': 0, 'dampening': 0}
             self._beta = self._add_parameter_to_optimize(beta_par)
         # Add learning rates to stats
         for i, _ in enumerate(self.lr_scheduler.get_lr()):
@@ -1600,8 +1600,11 @@ class sES(StochasticGradientEstimation):
                 lr = cov_lr
             else:
                 lr = self.lr_scheduler.get_lr()[0]
+                w_dec = self.optimizer.state_dict()['param_groups'][0]['weight_decay']
+                momt = self.optimizer.state_dict()['param_groups'][0]['momentum']
+                damp = self.optimizer.state_dict()['param_groups'][0]['dampening']
             beta_par = {'label': '_beta', 'params': Variable(beta_tensor, requires_grad=True),
-                        'lr': lr, 'weight_decay': 0, 'momentum': 0.9, 'dampening': 0.9}
+                        'lr': lr, 'weight_decay': w_dec, 'momentum': momt, 'dampening': damp}
             self._beta = self._add_parameter_to_optimize(beta_par)
         self.sigma = self._beta2sigma(self.beta.data)
         # Add learning rates to stats
