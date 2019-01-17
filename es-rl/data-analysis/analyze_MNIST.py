@@ -154,9 +154,9 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    experiment_ids = ['E001-MNIST_none', 'E002-MNIST_none_no_ranktransform', 'E003-MNIST_single', 'E004-MNIST_single_no_ranktransform', 'E005-MNIST_per-layer', 'E006-MNIST_per-layer_no_ranktransform', 'E007-MNIST_per-weight', 'E008-MNIST_per-weight_no_ranktransform']
+    #experiment_ids = ['E001-MNIST_none', 'E002-MNIST_none_no_ranktransform', 'E003-MNIST_single', 'E004-MNIST_single_no_ranktransform', 'E005-MNIST_per-layer', 'E006-MNIST_per-layer_no_ranktransform', 'E007-MNIST_per-weight', 'E008-MNIST_per-weight_no_ranktransform']
     #experiment_ids = ['E001-MNIST_none']
-    #experiment_ids = ['E010-Seaquest_sigma_per-layer']
+    experiment_ids = ['MNIST-none']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']

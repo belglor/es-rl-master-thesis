@@ -79,7 +79,7 @@ def parse_inputs():
     parser.add_argument('--cov-lr', type=float, default=None, metavar='LR_BETA', help='Optimizer learning rate for covariance parameter')
     parser.add_argument('--momentum', type=float, default=0, help='Optimizer momentum')
     parser.add_argument('--nesterov', action='store_true', help='Boolean to denote if optimizer momentum is Nesterov')
-    parser.add_argument('--weight-decay', type=float, default=0.001, help='Optimizer L2 norm weight decay penalty')
+    parser.add_argument('--weight-decay', type=float, default=0, help='Optimizer L2 norm weight decay penalty')
     # Learning rate scheduler
     parser.add_argument('--lr-scheduler', type=str, default='ExponentialLR', help='Learning rate scheduler')
     parser.add_argument('--gamma', type=float, default=1, help='Learning rate decay rate')
