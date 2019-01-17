@@ -60,14 +60,12 @@ FOO=${TIME_LIMIT:="24:00"}
 
 
 # List of input strings to the call
-ID="E014-CartPole_per-weight"
+ID="CartPole_per-weight"
 COMMON_IN="--id ${ID} --algorithm sNES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name CartPole-v0 --model ClassicalControlFNN --batch-size 1000 --safe-mutation None --optimize-sigma per-weight"
 declare -a INPUTS=(
-				   "$COMMON_IN"
-				   "$COMMON_IN --use-naturgrad"
+				   "$COMMON_IN "
 				   "$COMMON_IN --use-naturgrad --lr 1"
-				   "$COMMON_IN --baseline_mu --baseline_sigma"
-				   "$COMMON_IN --baseline_mu --baseline_sigma --use-naturgrad"
+				   "$COMMON_IN --baseline_mu --baseline_sigma"				 
 				   "$COMMON_IN --baseline_mu --baseline_sigma --use-naturgrad --lr 1"				   
 				   )
 SCRIPT="run_hpc.sh"

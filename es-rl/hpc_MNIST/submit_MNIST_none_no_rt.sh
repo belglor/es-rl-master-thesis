@@ -60,14 +60,12 @@ FOO=${TIME_LIMIT:="24:00"}
 
 
 # List of input strings to the call
-ID="E002-MNIST_none_no_ranktransform"
+ID="MNIST_none_no_ranktransform"
 COMMON_IN="--id ${ID} --algorithm sNES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name MNIST --model MNISTNet --batch-size 1000 --safe-mutation None --optimize-sigma None --no-ranktransform"
 declare -a INPUTS=(
-				   "$COMMON_IN"
-				   "$COMMON_IN --use-naturgrad"
+				   "$COMMON_IN "
 				   "$COMMON_IN --use-naturgrad --lr 1"
-				   "$COMMON_IN --baseline_mu --baseline_sigma"
-				   "$COMMON_IN --baseline_mu --baseline_sigma --use-naturgrad"
+				   "$COMMON_IN --baseline_mu --baseline_sigma"				 
 				   "$COMMON_IN --baseline_mu --baseline_sigma --use-naturgrad --lr 1"				   
 				   )
 SCRIPT="run_hpc.sh"

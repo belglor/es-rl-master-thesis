@@ -60,15 +60,13 @@ FOO=${TIME_LIMIT:="24:00"}
 
 
 # List of input strings to the call
-ID="E003-MNIST_single"
-COMMON_IN="--id ${ID} --algorithm sNES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name MNIST --model MNISTNet --batch-size 1000 --safe-mutation None"
+ID="MNIST_single"
+COMMON_IN="--id ${ID} --algorithm sNES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name MNIST --model MNISTNet --batch-size 1000 --safe-mutation None --optimize-sigma single"
 declare -a INPUTS=(
-				   "$COMMON_IN --optimize-sigma single"
-				   "$COMMON_IN --optimize-sigma single --use-naturgrad"
-				   "$COMMON_IN --optimize-sigma single --use-naturgrad --lr 1"
-				   "$COMMON_IN --optimize-sigma single --baseline_mu --baseline_sigma"
-				   "$COMMON_IN --optimize-sigma single --baseline_mu --baseline_sigma --use-naturgrad"
-				   "$COMMON_IN --optimize-sigma single --baseline_mu --baseline_sigma --use-naturgrad --lr 1"				   
+				   "$COMMON_IN "
+				   "$COMMON_IN --use-naturgrad --lr 1"
+				   "$COMMON_IN --baseline_mu --baseline_sigma"				 
+				   "$COMMON_IN --baseline_mu --baseline_sigma --use-naturgrad --lr 1"				   
 				   )
 SCRIPT="run_hpc.sh"
 REPEATS=1
