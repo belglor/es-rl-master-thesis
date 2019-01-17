@@ -77,7 +77,7 @@ def parse_inputs():
     parser.add_argument('--optimizer', type=str, default='SGD', help='Optimizer to use')
     parser.add_argument('--lr', type=float, default=0.05, metavar='LR', help='Optimizer learning rate')
     parser.add_argument('--cov-lr', type=float, default=None, metavar='LR_BETA', help='Optimizer learning rate for covariance parameter')
-    parser.add_argument('--momentum', type=float, default=0.9, help='Optimizer momentum')
+    parser.add_argument('--momentum', type=float, default=0, help='Optimizer momentum')
     parser.add_argument('--nesterov', action='store_true', help='Boolean to denote if optimizer momentum is Nesterov')
     parser.add_argument('--weight-decay', type=float, default=0.001, help='Optimizer L2 norm weight decay penalty')
     # Learning rate scheduler
@@ -341,9 +341,11 @@ if __name__ == '__main__':
         except FileNotFoundError as e:
             print("Could not load latest model after training: ", e)
         else:
-            test_model(args)
+            #test_model(args)
+            pass
     else:
-        test_model(args)
+        #test_model(args)
+        pass
 
 
 """

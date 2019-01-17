@@ -1264,6 +1264,19 @@ class StochasticGradientEstimation(Algorithm):
             # Print and checkpoint
             self._store_stats(mu_b, sigma_b, workers_out, unperturbed_out, unperturbed_val_out, n_generation, rank, workers_time, len(reused_seeds), n_rejected) #TODO: [L] added baseline storage
             self.print_iter()
+            if self.baseline_mu:
+                print("\n ################################# \n")
+                print("Average return: " + str(workers_out["return"].mean()))
+                print("Baseline: " + str(mu_b))
+                print("Shaped baseline: " + str(shaped_baseline_mu))
+                print("Shaped returns mean: " + str((shaped_returns - shaped_baseline_mu).mean()))
+                print("Shaped returns std: " + str((shaped_returns - shaped_baseline_mu).std()) +"\n")
+                print("\n ################################# \n")
+            else:
+                print("\n ################################# \n")
+                print("Shaped returns mean: " + str(shaped_returns.mean()))
+                print("Shaped returns std: " + str(shaped_returns.std())+"\n")
+                print("\n ################################# \n")
             if last_checkpoint_time < time.time() - self.chkpt_int:
                 self.save_checkpoint(best_model_stdct, best_optimizer_stdct, best_algorithm_stdct)
                 #plot_stats(os.path.join(self.chkpt_dir, 'stats.csv'), self.chkpt_dir)
@@ -1872,15 +1885,18 @@ class sNES(sES):
             for layer, param in enumerate(self.model.parameters()):
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer])
                 if (not self.optimize_sigma) or (self.optimize_sigma == 'single'):
-                    num += float((sign * retrn) * eps.pow(2).sum()) / (self.sigma**2) 
-                    denom += eps.pow(2).sum() / (self.sigma**2)
+                    ll = eps.pow(2).sum() / (self.sigma**2)
+                    num += float(sign * retrn) * ll
+                    denom += ll
                 elif self.optimize_sigma == 'per-layer':
-                    num += float((sign * retrn) * eps.pow(2).sum()) / (self.sigma[layer]**2) 
-                    denom += eps.pow(2).sum() / (self.sigma[layer]**2)
+                    ll = eps.pow(2).sum() / (self.sigma[layer]**2)
+                    num += float(sign * retrn) * ll
+                    denom += ll
                 elif self.optimize_sigma == 'per-weight': 
                     k = j + param.numel()
-                    num += ((sign * retrn * (eps.flatten()**2))/self.sigma[j:k]**2).sum()
-                    denom += ((eps.flatten()**2)/self.sigma[j:k]**2).sum()
+                    ll = ((eps.flatten()**2)/self.sigma[j:k]**2).sum()
+                    num += float(sign * retrn) * ll
+                    denom += ll
                     j = k
         baseline_mu = num/denom #TODO: added cast to float because REASONS
         return baseline_mu 
@@ -1966,6 +1982,10 @@ class sNES(sES):
                     r_s = float(retrn - baseline_sigma)
                 else:
                     r_s = float(retrn)
+                    
+                if self.no_ranktransform:
+                    r_mu /= returns.std()
+                    r_s /= returns.std()
                     
                 eps = self.get_perturbation(param.size(), sensitivities=self.sensitivities[layer], cuda=self.cuda)
                 
