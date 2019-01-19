@@ -60,13 +60,13 @@ FOO=${TIME_LIMIT:="24:00"}
 
 
 # List of input strings to the call
-ID="CartPole_none"
-COMMON_IN="--id ${ID} --algorithm sNES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name CartPole-v0 --model ClassicalControlFNN --batch-size 1000 --safe-mutation None --optimize-sigma None"
+ID="CartPole_single_m0_lr025"
+COMMON_IN="--id ${ID} --algorithm sNES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name CartPole-v0 --model ClassicalControlFNN --batch-size 1000 --safe-mutation None --optimize-sigma single --lr 0.25"
 declare -a INPUTS=(
 				   "$COMMON_IN "
-				   "$COMMON_IN --use-naturgrad --lr 1"
+				   "$COMMON_IN --use-naturgrad --lr 5"
 				   "$COMMON_IN --baseline_mu --baseline_sigma"				 
-				   "$COMMON_IN --baseline_mu --baseline_sigma --use-naturgrad --lr 1"				   
+				   "$COMMON_IN --baseline_mu --baseline_sigma --use-naturgrad --lr 5"				   
 				   )
 SCRIPT="run_hpc.sh"
 REPEATS=1

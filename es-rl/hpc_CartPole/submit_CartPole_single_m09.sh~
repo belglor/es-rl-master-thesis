@@ -60,8 +60,8 @@ FOO=${TIME_LIMIT:="24:00"}
 
 
 # List of input strings to the call
-ID="CartPole_per-layer"
-COMMON_IN="--id ${ID} --algorithm sNES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name CartPole-v0 --model ClassicalControlFNN --batch-size 1000 --safe-mutation None --optimize-sigma per-layer"
+ID="CartPole_single_m09"
+COMMON_IN="--id ${ID} --algorithm sNES --optimizer SGD --lr-scheduler ExponentialLR --gamma 1 --env-name CartPole-v0 --model ClassicalControlFNN --batch-size 1000 --safe-mutation None --optimize-sigma single --lr 0.05 --momentum 0.9"
 declare -a INPUTS=(
 				   "$COMMON_IN "
 				   "$COMMON_IN --use-naturgrad --lr 1"

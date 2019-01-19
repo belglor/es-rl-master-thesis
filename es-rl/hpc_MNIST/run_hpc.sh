@@ -21,7 +21,7 @@ module load gcc/7.2.0
 source ~/ml/bin/activate
 
 # Set open file limit
-ulimit -Sn 32768
+ulimit -Sn 4000
 
 # Set $HOME if running as a bsub script
 if [ -z "$BSUB_O_WORKDIR" ]; then

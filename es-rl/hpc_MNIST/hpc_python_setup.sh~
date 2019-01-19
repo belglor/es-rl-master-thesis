@@ -31,7 +31,7 @@ module load gcc/7.2.0
 # cd $HOME
 
 # Set open file limit
-ulimit -Sn 4000
+ulimit -Sn 32768
 
 # Setup virtual env
 if [ ! -d ~/ml ]
