@@ -156,7 +156,9 @@ if __name__ == '__main__':
     # Experiment IDs
     #experiment_ids = ['E001-MNIST_none', 'E002-MNIST_none_no_ranktransform', 'E003-MNIST_single', 'E004-MNIST_single_no_ranktransform', 'E005-MNIST_per-layer', 'E006-MNIST_per-layer_no_ranktransform', 'E007-MNIST_per-weight', 'E008-MNIST_per-weight_no_ranktransform']
     #experiment_ids = ['E001-MNIST_none']
-    experiment_ids = ['MNIST-none']
+    #experiment_ids = ['MNIST_none_m0', 'MNIST_single_m0', 'MNIST_pl_m0', 'MNIST_pw_m0']
+    experiment_ids = ['MNIST_none_m0_lr025', 'MNIST_single_m0_lr025', 'MNIST_pl_m0_lr025', 'MNIST_pw_m0_lr025']
+    #experiment_ids = ['MNIST_none_m09', 'MNIST_single_m09', 'MNIST_per-layer_m09', 'MNIST_per-weight_m09']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']

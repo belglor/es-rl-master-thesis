@@ -59,7 +59,7 @@ def create_plots(stats_list, keys_to_plot, groups, result_dir, include_val=True)
 #        elif 'accuracy' in k:
 #            plt.gca().set_ylim(0.3, 1)
         plt.savefig(os.path.join(result_dir, k + '-all-series-mean-sd' + '.pdf'), bbox_inches='tight')
-        plt.close()zz
+        plt.close()
         # Progress
         if i_key + 1 == n_keys:
             print(f.format(i_key+1, n_keys), end='\n')
@@ -154,7 +154,10 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    experiment_ids = ['E008-CartPole_none', 'E009-CartPole_none_no_ranktransform', 'E010-CartPole_single', 'E011-CartPole_single_no_ranktransform', 'E012-CartPole_per-layer', 'E013-CartPole_per-layer_no_ranktransform', 'E014-CartPole_per-weight', 'E015-CartPole_per-weight_no_ranktransform']
+    #experiment_ids = ['E008-CartPole_none', 'E009-CartPole_none_no_ranktransform', 'E010-CartPole_single', 'E011-CartPole_single_no_ranktransform', 'E012-CartPole_per-layer', 'E013-CartPole_per-layer_no_ranktransform', 'E014-CartPole_per-weight', 'E015-CartPole_per-weight_no_ranktransform']
+    #experiment_ids = ['CartPole_none', 'CartPole_single', 'CartPole_per-layer', 'CartPole_per-weight']
+    #experiment_ids = ['CartPole_none_m09', 'CartPole_single_m09', 'CartPole_per-layer_m09', 'CartPole_per-weight_m09']
+    experiment_ids = ['CartPole_none_m0_lr025', 'CartPole_single_m0_lr025', 'CartPole_per-layer_m0_lr025', 'CartPole_per-weight_m0_lr025']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']

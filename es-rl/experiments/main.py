@@ -287,8 +287,9 @@ if __name__ == '__main__':
     #TODO: manual seed, te remove when sending to queue
     master_seed = 42
     random.seed(master_seed)
-    torch.manual_seed(master_seed)
     np.random.seed(master_seed)
+    torch.manual_seed(master_seed)
+    torch.cuda.manual_seed(42)
     print('########################')
     print('Using ' + str(master_seed) + ' as master seed!')
     print('########################')

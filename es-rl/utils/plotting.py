@@ -137,7 +137,7 @@ def timeseries_mean_grouped(xdatas, ydatas, groups, xlabel, ylabel, figsize=(6.4
     #     colors = plt.cm.gnuplot(np.linspace(0, 1, n_groups))
     #     #colors = np.reshape(np.append(colors[0::2], colors[1::2]), (6, 4))
     # else:
-    colors = plt.cm.Set1(np.linspace(0, 1, n_groups))
+    colors = plt.cm.gnuplot(np.linspace(0, 1, n_groups))
     sns.set_style("ticks")
     for g, c in zip(np.unique(groups), colors[0:n_groups]):
         if type(g) in [str, np.str, np.str_]:
