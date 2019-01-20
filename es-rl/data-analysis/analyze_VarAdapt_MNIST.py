@@ -58,7 +58,7 @@ def create_plots(stats_list, keys_to_plot, groups, result_dir, include_val=True)
             plt.gca().set_ylim(0, 3)
 #        elif 'accuracy' in k:
 #            plt.gca().set_ylim(0.3, 1)
-        plt.savefig(os.path.join(result_dir, k + '_' + groups[0] +'_baseline' + '.pdf'), bbox_inches='tight')
+        plt.savefig(os.path.join(result_dir, k + '-all-series-mean-sd' + '.pdf'), bbox_inches='tight')
         plt.close()
         # Progress
         if i_key + 1 == n_keys:
@@ -124,9 +124,9 @@ def analyze(experiment_id, optimizer, keys_to_plot):
                 
             if 'Use natural gradient  True' in s:
                 g += '_naturgrad'
-                
-            if 'initial_lr: 1.0' in s:
-                g += '_lr1'
+#                
+#            if 'initial_lr: 1.0' in s:
+#                g += '_lr1'
                 
             groups = np.append(groups, g + optimizer)
 
@@ -154,12 +154,18 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    experiment_ids = ['D001-MNIST_none_baseline', 'D002-MNIST_single_baseline', 'D003-MNIST_pl_baseline', 'D004-MNIST_pw_baseline']
+    #experiment_ids = ['E001-MNIST_none', 'E002-MNIST_none_no_ranktransform', 'E003-MNIST_single', 'E004-MNIST_single_no_ranktransform', 'E005-MNIST_per-layer', 'E006-MNIST_per-layer_no_ranktransform', 'E007-MNIST_per-weight', 'E008-MNIST_per-weight_no_ranktransform']
+    #experiment_ids = ['E001-MNIST_none']
+    #experiment_ids = ['MNIST_none_m0', 'MNIST_single_m0', 'MNIST_pl_m0', 'MNIST_pw_m0']
+    #experiment_ids = ['MNIST_none_m0_lr025', 'MNIST_single_m0_lr025', 'MNIST_pl_m0_lr025', 'MNIST_pw_m0_lr025']
+    experiment_ids = ['VarAdapt_MNIST']
+    #experiment_ids = ['MNIST_none_m09', 'MNIST_single_m09', 'MNIST_per-layer_m09', 'MNIST_per-weight_m09']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']
     # Keys to analyze
     keys_to_plot = ['return_unp', 'return_avg', 'accuracy_avg', 'accuracy_unp', 'grad_norm', 'param_norm']
+    #keys_to_plot = ['sigma']
     # Analyze
     for experiment_id, optimizer in zip(experiment_ids, optimizers):
         analyze(experiment_id, optimizer, keys_to_plot)

@@ -137,7 +137,7 @@ def timeseries_mean_grouped(xdatas, ydatas, groups, xlabel, ylabel, figsize=(6.4
     #     colors = plt.cm.gnuplot(np.linspace(0, 1, n_groups))
     #     #colors = np.reshape(np.append(colors[0::2], colors[1::2]), (6, 4))
     # else:
-    colors = plt.cm.gnuplot(np.linspace(0, 1, n_groups))
+    colors = plt.cm.tab20(np.linspace(0, 1, n_groups))
     sns.set_style("ticks")
     for g, c in zip(np.unique(groups), colors[0:n_groups]):
         if type(g) in [str, np.str, np.str_]:
@@ -231,7 +231,7 @@ def plot_stats(stats_file, chkpt_dir, wide_figure=True, map_labels=False):
     # Compute moving averages
     for c in stats.columns:
         if not 'Unnamed' in c and c[-3:] != '_ma':
-            stats[c + '_ma'] = stats[c].rolling(window=100, center=True, win_type=None).mean()
+            stats[c + '_ma'] = stats[c].rolling(window=10, min_periods=1, center=True, win_type=None).mean()
         
     # Plot each of the columns including moving average
     c_list = stats.columns.tolist()
@@ -244,15 +244,17 @@ def plot_stats(stats_file, chkpt_dir, wide_figure=True, map_labels=False):
             if is_part_of_multi_series(c):
                 # Find all c that are in this series
                 cis = {ci for ci in stats.columns if ci.split('_')[:-1] == c.split('_')[:-1] and not is_moving_average(c)}
+                nlines = len(cis)
                 for ci in cis.difference({c}):
                     c_list.remove(ci)
                 cis = sorted(list(cis))
                 c = ''.join(c.split('_')[:-1])
                 # Loop over them and plot into same plot
                 fig, ax = plt.subplots(figsize=figsize)
+                ax.set_prop_cycle('color',plt.cm.tab20(np.linspace(0,1,nlines)))
                 for ci in cis:
-                    stats[ci].plot(ax=ax, linestyle='None', marker='.', alpha=0.2, label='_nolegend_')
-                ax.set_prop_cycle(None)
+                    stats[ci].plot(ax=ax, linestyle='None', marker='.', alpha=0.06, label='_nolegend_')
+                #ax.set_prop_cycle(None)
                 for ci in cis:
                     stats[ci + '_ma'].plot(ax=ax, linestyle='-', label=ci)
                 box = ax.get_position()
@@ -261,7 +263,7 @@ def plot_stats(stats_file, chkpt_dir, wide_figure=True, map_labels=False):
             else:
                 fig, ax = plt.subplots(figsize=figsize)
                 stats[c].astype(float)
-                stats[c].plot(ax=ax, alpha=0.2, linestyle='None', marker='.', label='_nolegend_')
+                stats[c].plot(ax=ax, alpha=0.06, linestyle='None', marker='.', label='_nolegend_')
                 ax.set_prop_cycle(None)
                 stats[c + '_ma'].plot(ax=ax, linestyle='-', label='_nolegend_')
                 # ax.legend(loc='best')
