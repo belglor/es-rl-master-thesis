@@ -154,18 +154,15 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    #experiment_ids = ['E001-MNIST_none', 'E002-MNIST_none_no_ranktransform', 'E003-MNIST_single', 'E004-MNIST_single_no_ranktransform', 'E005-MNIST_per-layer', 'E006-MNIST_per-layer_no_ranktransform', 'E007-MNIST_per-weight', 'E008-MNIST_per-weight_no_ranktransform']
-    #experiment_ids = ['E001-MNIST_none']
-    #experiment_ids = ['MNIST_none_m0', 'MNIST_single_m0', 'MNIST_pl_m0', 'MNIST_pw_m0']
     #experiment_ids = ['MNIST_none_m0_lr025', 'MNIST_single_m0_lr025', 'MNIST_pl_m0_lr025', 'MNIST_pw_m0_lr025']
-    experiment_ids = ['MNIST_single_m0_lr025']
-    #experiment_ids = ['MNIST_none_m09', 'MNIST_single_m09', 'MNIST_per-layer_m09', 'MNIST_per-weight_m09']
+    #experiment_ids = ['MNIST_none_no_rt', 'MNIST_single_no_rt', 'MNIST_pl_no_rt', 'MNIST_pw_no_rt']
+    experiment_ids = ['MNIST_none_mx300', 'MNIST_single_mx300', 'MNIST_pl_mx300', 'MNIST_pw_mx300']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']
     # Keys to analyze
-    #keys_to_plot = ['return_unp', 'return_avg', 'accuracy_avg', 'accuracy_unp', 'grad_norm', 'param_norm']
-    keys_to_plot = ['sigma']
+    keys_to_plot = ['return_unp', 'return_avg', 'accuracy_avg', 'accuracy_unp', 'grad_norm', 'param_norm', 'param_change']
+    #keys_to_plot = ['sigma']
     # Analyze
     for experiment_id, optimizer in zip(experiment_ids, optimizers):
         analyze(experiment_id, optimizer, keys_to_plot)

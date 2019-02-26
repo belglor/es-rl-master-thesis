@@ -52,10 +52,10 @@ def create_plots(stats_list, keys_to_plot, groups, result_dir, include_val=True)
         groups.sort()
 
         # Plot
-        plot.timeseries_mean_grouped(list_of_genera, list_of_series, groups, xlabel='generations', ylabel=k, map_labels='supervised')
+        plot.timeseries_mean_grouped(list_of_genera, list_of_series, groups, xlabel='generations', ylabel=k, map_labels='reinforcement')
         #TODO: set ylim for loglikelihood, leave without lims for RL
-        if 'return' in k:
-            plt.gca().set_ylim(0, 3)
+#        if 'return' in k:
+#            plt.gca().set_ylim(0, 3)
 #        elif 'accuracy' in k:
 #            plt.gca().set_ylim(0.3, 1)
         plt.savefig(os.path.join(result_dir, k + '-all-series-mean-sd' + '.pdf'), bbox_inches='tight')
@@ -124,7 +124,7 @@ def analyze(experiment_id, optimizer, keys_to_plot):
                 
             if 'Use natural gradient  True' in s:
                 g += '_naturgrad'
-#                
+                
 #            if 'initial_lr: 1.0' in s:
 #                g += '_lr1'
                 
@@ -154,17 +154,16 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    #experiment_ids = ['E001-MNIST_none', 'E002-MNIST_none_no_ranktransform', 'E003-MNIST_single', 'E004-MNIST_single_no_ranktransform', 'E005-MNIST_per-layer', 'E006-MNIST_per-layer_no_ranktransform', 'E007-MNIST_per-weight', 'E008-MNIST_per-weight_no_ranktransform']
-    #experiment_ids = ['E001-MNIST_none']
-    #experiment_ids = ['MNIST_none_m0', 'MNIST_single_m0', 'MNIST_pl_m0', 'MNIST_pw_m0']
-    #experiment_ids = ['MNIST_none_m0_lr025', 'MNIST_single_m0_lr025', 'MNIST_pl_m0_lr025', 'MNIST_pw_m0_lr025']
-    experiment_ids = ['VarAdapt_MNIST']
-    #experiment_ids = ['MNIST_none_m09', 'MNIST_single_m09', 'MNIST_per-layer_m09', 'MNIST_per-weight_m09']
+    #experiment_ids = ['E008-CartPole_none', 'E009-CartPole_none_no_ranktransform', 'E010-CartPole_single', 'E011-CartPole_single_no_ranktransform', 'E012-CartPole_per-layer', 'E013-CartPole_per-layer_no_ranktransform', 'E014-CartPole_per-weight', 'E015-CartPole_per-weight_no_ranktransform']
+    #experiment_ids = ['CartPole_none', 'CartPole_single', 'CartPole_per-layer', 'CartPole_per-weight']
+    #experiment_ids = ['CartPole_none_m09', 'CartPole_single_m09', 'CartPole_per-layer_m09', 'CartPole_per-weight_m09']
+    #experiment_ids = ['CartPole_none_m0_lr025', 'CartPole_single_m0_lr025', 'CartPole_per-layer_m0_lr025', 'CartPole_per-weight_m0_lr025']
+    experiment_ids = ['CartPole_none_no_rt_relevant']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']
     # Keys to analyze
-    keys_to_plot = ['return_unp', 'return_avg', 'accuracy_avg', 'accuracy_unp', 'grad_norm', 'param_norm', 'param_change']
+    keys_to_plot = ['return_unp', 'return_avg', 'grad_norm', 'param_norm', 'param_change', 'return_var']
     #keys_to_plot = ['sigma']
     # Analyze
     for experiment_id, optimizer in zip(experiment_ids, optimizers):

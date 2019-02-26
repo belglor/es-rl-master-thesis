@@ -158,8 +158,9 @@ if __name__ == '__main__':
     #experiment_ids = ['E001-MNIST_none']
     #experiment_ids = ['MNIST_none_m0', 'MNIST_single_m0', 'MNIST_pl_m0', 'MNIST_pw_m0']
     #experiment_ids = ['MNIST_none_m0_lr025', 'MNIST_single_m0_lr025', 'MNIST_pl_m0_lr025', 'MNIST_pw_m0_lr025']
-    experiment_ids = ['VarAdapt_MNIST']
+    #experiment_ids = ['Baseline_MNIST','Baseline_MNIST_pl','Baseline_MNIST_pw']
     #experiment_ids = ['MNIST_none_m09', 'MNIST_single_m09', 'MNIST_per-layer_m09', 'MNIST_per-weight_m09']
+    experiment_ids = ['Naturgrad_MNIST_outperformance']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']

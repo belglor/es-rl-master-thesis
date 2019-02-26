@@ -12,15 +12,26 @@ import seaborn as sns
 import torch
 from cycler import cycler
 
-import utils.filesystem as fs
-from utils.misc import get_longest_sublists
-from utils.data_analysis import lookup_label
+import filesystem as fs
+from misc import get_longest_sublists
+from data_analysis import lookup_label
 
-import utils.plotting as plot
+import plotting as plot
 
 #experiment_ids = ['VarAdapt_MNIST', 'VarAdapt_CartPole']
 #experiment_ids = ['MNIST_none_m0_lr025', 'MNIST_single_m0_lr025', 'MNIST_pl_m0_lr025', 'MNIST_pw_m0_lr025' ]
-experiment_ids = ['CartPole_none_m0_lr025', 'CartPole_single_m0_lr025', 'CartPole_per-layer_m0_lr025', 'CartPole_per-weight_m0_lr025']
+#experiment_ids = ['CartPole_none_m0_lr025', 'CartPole_single_m0_lr025', 'CartPole_per-layer_m0_lr025', 'CartPole_per-weight_m0_lr025']
+
+#experiment_ids = ['MNIST_none_no_rt', 'MNIST_single_no_rt', 'MNIST_pl_no_rt', 'MNIST_pw_no_rt']
+#experiment_ids = ['CartPole_none_no_rt', 'CartPole_single_no_rt', 'CartPole_per-layer_no_rt', 'CartPole_per-weight_no_rt']
+
+#experiment_ids = ['MNIST_none_mx300', 'MNIST_single_mx300', 'MNIST_pl_mx300', 'MNIST_pw_mx300']
+#experiment_ids = ['Seaquest_none_m0_lr025', 'Seaquest_single_m0_lr025', 'Seaquest_pl_m0_lr025', 'Seaquest_pw_m0_lr025']
+this_file_dir_local1 = os.path.dirname(os.path.abspath(__file__))
+package_root_this_file1 = fs.get_parent(this_file_dir_local1, 'es-rl')
+d1 = os.path.join(package_root_this_file1, 'experiments', 'checkpoints')
+experiment_ids = os.listdir(d1)
+
 for experiment_id in experiment_ids:
     this_file_dir_local = os.path.dirname(os.path.abspath(__file__))
     package_root_this_file = fs.get_parent(this_file_dir_local, 'es-rl')

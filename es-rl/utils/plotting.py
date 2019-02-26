@@ -15,6 +15,8 @@ from cycler import cycler
 from utils.misc import get_longest_sublists
 from utils.data_analysis import lookup_label
 
+#from misc import get_longest_sublists
+#from data_analysis import lookup_label
 
 def moving_average(y, window=100, center=True):
     """
@@ -263,7 +265,7 @@ def plot_stats(stats_file, chkpt_dir, wide_figure=True, map_labels=False):
             else:
                 fig, ax = plt.subplots(figsize=figsize)
                 stats[c].astype(float)
-                stats[c].plot(ax=ax, alpha=0.06, linestyle='None', marker='.', label='_nolegend_')
+                stats[c].plot(ax=ax, alpha=0.3, linestyle='None', marker='.', label='_nolegend_')
                 ax.set_prop_cycle(None)
                 stats[c + '_ma'].plot(ax=ax, linestyle='-', label='_nolegend_')
                 # ax.legend(loc='best')

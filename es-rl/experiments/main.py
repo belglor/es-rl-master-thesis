@@ -342,10 +342,10 @@ if __name__ == '__main__':
         except FileNotFoundError as e:
             print("Could not load latest model after training: ", e)
         else:
-            #test_model(args)
+            test_model(args)
             pass
     else:
-        #test_model(args)
+        test_model(args)
         pass
 
 

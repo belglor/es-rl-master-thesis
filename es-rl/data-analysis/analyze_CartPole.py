@@ -154,17 +154,14 @@ if __name__ == '__main__':
     # Font setting
     matplotlib.rcParams.update({'font.size': 12})
     # Experiment IDs
-    #experiment_ids = ['E008-CartPole_none', 'E009-CartPole_none_no_ranktransform', 'E010-CartPole_single', 'E011-CartPole_single_no_ranktransform', 'E012-CartPole_per-layer', 'E013-CartPole_per-layer_no_ranktransform', 'E014-CartPole_per-weight', 'E015-CartPole_per-weight_no_ranktransform']
-    #experiment_ids = ['CartPole_none', 'CartPole_single', 'CartPole_per-layer', 'CartPole_per-weight']
-    #experiment_ids = ['CartPole_none_m09', 'CartPole_single_m09', 'CartPole_per-layer_m09', 'CartPole_per-weight_m09']
     #experiment_ids = ['CartPole_none_m0_lr025', 'CartPole_single_m0_lr025', 'CartPole_per-layer_m0_lr025', 'CartPole_per-weight_m0_lr025']
-    experiment_ids = ['CartPole_single_m0_lr025']
+    experiment_ids = ['CartPole_none_no_rt','CartPole_single_no_rt','CartPole_per-layer_no_rt','CartPole_per-weight_no_rt']
     # Optimizer labels
     # optimizers = [', SGD', ', ADAM']
     optimizers = ['', '', '', '', '', '', '' ,'' ,'' ,'' ,'' ,'' ,'']
     # Keys to analyze
-    #keys_to_plot = ['return_unp', 'return_avg', 'grad_norm', 'param_norm']
-    keys_to_plot = ['sigma']
+    keys_to_plot = ['return_unp', 'return_avg', 'grad_norm', 'param_norm', 'param_change']
+    #keys_to_plot = ['sigma']
     # Analyze
     for experiment_id, optimizer in zip(experiment_ids, optimizers):
         analyze(experiment_id, optimizer, keys_to_plot)
